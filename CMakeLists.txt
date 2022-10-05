@@ -85,9 +85,15 @@ elseif(UNIX)
     set (CMAKE_CXX_FLAGS                "${V8SQLITE_CXX_CLANG_FLAGS}")
     set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} ${V8SQLITE_C_CLANG_FLAGS}")
     set (CMAKE_CXX_FLAGS_RELEASE        "${V8SQLITE_CXX_CLANG_RELEASE}")
-    set (CMAKE_CXX_FLAGS_DEBUG          "${V8SQLITE_CXX_CLANG_DEBUG}")
+    set (CMAKE_CXX_FLAGS_DEBUG          "${V8SQLITE_CXX_CLANG_DEBUG} -g")
     set (CMAKE_C_FLAGS_RELEASE          "${V8SQLITE_CXX_CLANG_RELEASE}")
     set (CMAKE_C_FLAGS_DEBUG            "${V8SQLITE_CXX_FLAGS_DEBUG}")
+
+    if (CMAKE_BUILD_TYPE STREQUAL Debug)
+        set (CMAKE_C_FLAGS              "${CMAKE_C_FLAGS} ${V8SQLITE_CXX_CLANG_DEBUG}")
+    else ()
+        set (CMAKE_C_FLAGS              "${CMAKE_C_FLAGS} ${V8SQLITE_CXX_CLANG_RELEASE}")
+    endif ()
 
 endif()
 

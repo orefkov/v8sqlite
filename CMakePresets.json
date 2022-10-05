@@ -147,7 +147,15 @@
       "vendor": {
         "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
           "sourceDir": "$env{HOME}/projects/$ms{projectDirName}",
-          "copySourcesOptions": { "exclusionList": [ ".vs", ".git", "out", "_build", "1C" ] }
+          "copySourcesOptions": {
+            "exclusionList": [
+              ".vs",
+              ".git",
+              "out",
+              "_build",
+              "1C"
+            ]
+          }
         }
       }
     },

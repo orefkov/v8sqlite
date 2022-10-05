@@ -150,15 +150,20 @@ bool V8SqliteAddin::BindParam(tVariant* params, unsigned count) {
 
 struct ToTextReceiver {
     chunked_string_concatenator<u16symbol>& vtText;
-    hashStrMapUIU<int> datesColumns;
-    std::unordered_set<int> dates;
+    hashStrMapUIU<int>& datesColumns;
+    std::vector<char> dates;
     unsigned currentCol{0};
     unsigned colCount{0};
     int error{0};
 
+    void doSetColCount(unsigned cc) {
+        colCount = cc;
+        dates.resize(colCount, 0);
+    }
+
     void checkColumnForDates(ssu colName) {
         if (datesColumns.find(colName) != datesColumns.end()) {
-            dates.insert(currentCol);
+            dates[currentCol] = 1;
         }
     }
 
@@ -172,7 +177,7 @@ struct ValueTableReceiver : ToTextReceiver {
     unsigned startOfRowCount = 0;
 
     void setColumnCount(unsigned cc) {
-        colCount = cc;
+        doSetColCount(cc);
         vtText << (eeu & u"{\"#\",acf6192e-81ca-46ef-93a6-5a6968b78663,{9,{" & cc & u",");
     }
 
@@ -220,7 +225,7 @@ struct ValueTableReceiver : ToTextReceiver {
         currentCol++;
     }
     void addText(ssu v) {
-        if (dates.size() && dates.contains(currentCol) && v.len == 19) {
+        if (dates[currentCol] && v.len == 19) {
             vtText << (eeu & u"{\"D\"," & v(0, 4) & v(5, 2) & v(8, 2) & v(11, 2) & v(14, 2) & v(17, 2) & u"},");
         } else {
             vtText << (eeu & u"{\"S\",\"" & e_repl(v, u"\"", u"\"\"") & u"\"},");
@@ -258,7 +263,7 @@ struct JsonReceiver : ToTextReceiver {
     void fixAnswer(WCHAR_T* answer) {}
 
     void setColumnCount(unsigned cc) {
-        colCount = cc;
+        doSetColCount(cc);
         vtText << uR"({"#type":"jv8:Array","#value":[{"#type":"jv8:Array","#value":[)";
     }
 
@@ -293,7 +298,7 @@ struct JsonReceiver : ToTextReceiver {
         addDelim();
     }
     void addText(ssu v) {
-        if (dates.size() && dates.contains(currentCol) && v.len == 19) {
+        if (dates[currentCol] && v.len == 19) {
             vtText << (eeu & uR"({"#type":"jxs:dateTime","#value":")" & v(0, 10) & u'T' & v(11) & u"\"}");
         } else {
             vtText << (eeu & uR"({"#type":"jxs:string","#value":")" & expr_json_str(v) & u"\"}");
@@ -383,9 +388,6 @@ bool V8SqliteAddin::ExecQuery(tVariant& retVal, tVariant* params, unsigned count
 }
 
 bool V8SqliteAddin::RemoveQuery(tVariant* params, unsigned count) {
-    if (!db_.isOpen()) {
-        return error(u"База данных не открыта", u"Database not opened");
-    }
     if (params[0].vt != VTYPE_PWSTR) {
         return error(u"Первый параметр должен быть строкой", u"First param must be string");
     }

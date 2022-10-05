@@ -24,7 +24,11 @@ TEST(Sqlite, CreateBase) {
 
 TEST(Sqlite, ErrorCreateBase) {
     SqliteBase base;
+#ifdef _WIN32
     EXPECT_FALSE(base.open(u"c:\\nul\\com"));
+#else
+    EXPECT_FALSE(base.open(u"/sys"));
+#endif
     EXPECT_EQ(base.lastError(), u"unable to open database file");
     EXPECT_FALSE(base.isOpen());
 }
@@ -101,6 +105,7 @@ struct SimpleResultReceiver {
         value& operator=(value other) {
             this->~value();
             new (this) value(std::move(other));
+            return *this;
         }
 
         stringa& blob() {
