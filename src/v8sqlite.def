@@ -1,0 +1,8 @@
+LIBRARY "v8sqlite.dll"
+
+EXPORTS
+GetClassObject
+DestroyObject
+GetClassNames
+SetPlatformCapabilities
+GetAttachType

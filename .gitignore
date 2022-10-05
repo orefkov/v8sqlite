@@ -1,0 +1,7 @@
+_build/
+1C/
+out/
+!.gitignore
+*.ipch
+*.VC.*
+.vs/
