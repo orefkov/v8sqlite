@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "addin_base.h"
 #include "sqlite.h"
+#include "version.h"
 
 #define ADDIN_NAME u"v8sqlite"
 
@@ -17,6 +18,13 @@ public:
     virtual ~V8SqliteAddin();
 
     REGISTER_EXTENSION(ADDIN_NAME);
+    EXT_PROP_RO(Version, u"Версия") {
+        lstringu<40> v{ssa{P_VERSION}};
+        value.vt = VTYPE_PWSTR;
+        value.pwstrVal = copyText(v);
+        value.wstrLen  = v.length();
+        return true;
+    }
 
     EXT_PROP_RW(ThrowErrorDescription, u"БросатьОписаниеОшибки") {
         value.vt = VTYPE_BOOL;

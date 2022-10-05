@@ -244,7 +244,7 @@ struct ValueTableReceiver : ToTextReceiver {
                 for (unsigned i = 0; i < colCount; i++) {
                     vtText << (eeu & i & u"," & i & u",");
                 }
-                vtText << u"{1,0,},2,-1},{0,0}}}";
+                vtText << u"{1,0},2,-1},{0,0}}}";
             } else
                 vtText << u"0}},1,2},{0,0}}}";
         }
