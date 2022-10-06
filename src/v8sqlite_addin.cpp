@@ -159,6 +159,12 @@ struct ToTextReceiver {
     void doSetColCount(unsigned cc) {
         colCount = cc;
         dates.resize(colCount, 0);
+        for (const auto& [d, __]: datesColumns) {
+            auto [colIdx, err, _] = d.to_str().toInt<unsigned, true, 10, false>();
+            if (err == IntConvertResult::Success && colIdx < colCount) {
+                dates[colIdx] = 1;
+            }
+        }
     }
 
     void checkColumnForDates(ssu colName) {
@@ -354,7 +360,7 @@ bool V8SqliteAddin::ExecQuery(tVariant& retVal, tVariant* params, unsigned count
 
     if (params[2].vt != VTYPE_NULL) {
         if (params[2].vt == VTYPE_PWSTR) {
-            auto vals = varToTextU(params[2]).split<std::vector<ssu>>(u",");
+            auto vals = varToTextU(params[2]).splitf<std::vector<ssu>>(u",", [](ssu& t) { t = t.trimmed(); });
             for (const auto& v : vals) {
                 dates.emplace(v, 0);
             }
