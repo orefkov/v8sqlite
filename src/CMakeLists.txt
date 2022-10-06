@@ -21,6 +21,11 @@ endif()
 add_library(${PROJECT_NAME} SHARED ${V8SQLITE_SRC})
 target_link_libraries(${PROJECT_NAME} sqlite3 core_as_str)
 
+add_compile_definitions(
+    SQLITE_CORE
+    SQLITE_ENABLE_UNICODE
+)
+
 if (WIN32)
     add_compile_definitions(
         UNICODE
@@ -29,8 +34,6 @@ if (WIN32)
         _CRT_SECURE_NO_WARNINGS
         _CRT_SECURE_NO_DEPRECATE
         ADDINCPP_EXPORTS
-        SQLITE_CORE
-        SQLITE_ENABLE_UNICODE
     )
 else ()
     if (V8SQLITE_STATIC_RUNTIME)

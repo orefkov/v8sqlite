@@ -14,7 +14,7 @@ typedef struct {
 } uuid_t;
 
 #else
-#include <uuid/uuid.h>
+#include <linux/uuid.h>
 #endif //__ANDROID__
 
 #ifndef __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__  // iOS

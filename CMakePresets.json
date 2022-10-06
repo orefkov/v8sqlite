@@ -135,8 +135,8 @@
       "inherits": "base",
       "displayName": "Linux Debug",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang-15",
-        "CMAKE_CXX_COMPILER": "clang++-15",
+        "CMAKE_C_COMPILER": "clang-16",
+        "CMAKE_CXX_COMPILER": "clang++-16",
         "CMAKE_EXPORT_COMPILE_COMMANDS": true
       },
       "condition": {
