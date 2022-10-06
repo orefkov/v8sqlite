@@ -2,9 +2,9 @@
 #include "stdafx.h"
 #include <unordered_set>
 
-V8SqliteAddin::V8SqliteAddin() {}
+V8SqliteAddin::V8SqliteAddin() = default;
 
-V8SqliteAddin::~V8SqliteAddin() {}
+V8SqliteAddin::~V8SqliteAddin() = default;
 
 bool V8SqliteAddin::OpenDataBase(tVariant* params, unsigned count) {
     if (params[0].vt != VTYPE_PWSTR) {
@@ -159,8 +159,8 @@ struct ToTextReceiver {
     void doSetColCount(unsigned cc) {
         colCount = cc;
         dates.resize(colCount, 0);
-        for (const auto& [d, __]: datesColumns) {
-            auto [colIdx, err, _] = d.to_str().toInt<unsigned, true, 10, false>();
+        for (const auto& [d, _1]: datesColumns) {
+            auto [colIdx, err, _2] = d.to_str().toInt<unsigned, true, 10, false>();
             if (err == IntConvertResult::Success && colIdx < colCount) {
                 dates[colIdx] = 1;
             }
@@ -256,7 +256,7 @@ struct ValueTableReceiver : ToTextReceiver {
         }
     }
 
-    void fixAnswer(WCHAR_T* answer) {
+    void fixAnswer(WCHAR_T* answer) const {
         if (rowCount) {
             lstringu<40> rc = eeu & rowCount;
             rc.place(answer + startOfRowCount);
@@ -369,7 +369,7 @@ bool V8SqliteAddin::ExecQuery(tVariant& retVal, tVariant* params, unsigned count
         }
     }
 
-    SqliteQuery tmpQuery{nullptr}, *query;
+    SqliteQuery tmpQuery{nullptr}, *query = nullptr;
     auto find = prepared_.find(varToTextU(params[0]));
     if (find == prepared_.end()) {
         tmpQuery = db_.prepare(varToTextU(params[0]));
@@ -380,7 +380,7 @@ bool V8SqliteAddin::ExecQuery(tVariant& retVal, tVariant* params, unsigned count
         query = &find->second;
     }
 
-    bool result;
+    bool result = false;
     lastError_.makeEmpty();
 
     if (resultFormat.compare_ia(u"ValueTable") == 0 || resultFormat.compare_iu(u"ТаблицаЗначений") == 0) {
