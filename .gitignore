@@ -6,3 +6,4 @@ out/
 *.VC.*
 .vs/
 .vscode/
+CMakeUserPresets.json
