@@ -22,7 +22,7 @@ public:
         lstringu<40> v{ssa{P_VERSION}};
         value.vt = VTYPE_PWSTR;
         value.pwstrVal = copyText(v);
-        value.wstrLen  = v.length();
+        value.wstrLen  = (int)v.length();
         return true;
     }
 

@@ -29,7 +29,7 @@ int SqliteBase::exec(stru query) {
 SqliteQuery SqliteBase::prepare(stru query) {
     sqlite3_stmt* stmt = nullptr;
     if (db_) {
-        sqlite3_prepare16_v3(db_, (void*)query.str, query.len * 2, 0, &stmt, nullptr);
+        sqlite3_prepare16_v3(db_, (void*)query.str, (int)query.length() * 2, 0, &stmt, nullptr);
     }
     return SqliteQuery(stmt);
 }

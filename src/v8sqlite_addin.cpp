@@ -133,9 +133,8 @@ bool V8SqliteAddin::BindParam(tVariant* params, unsigned count) {
 
     SqliteQuery& query = find->second;
 
-    int paramNum = params[1].vt == VTYPE_PWSTR ?
-        sqlite3_bind_parameter_index(query, lstringa<100>{varToTextU(params[1])})
-        : getInteger(params[1]);
+    int paramNum =
+        params[1].vt == VTYPE_PWSTR ? sqlite3_bind_parameter_index(query, lstringa<100>{varToTextU(params[1])}) : getInteger(params[1]);
 
     if (!paramNum || paramNum > sqlite3_bind_parameter_count(query)) {
         return error(u"Неверный параметр запроса", u"Bad query param");
@@ -189,16 +188,12 @@ struct ValueTableReceiver : ToTextReceiver {
 
     void addColumnName(ssu name) {
         checkColumnForDates(name);
-        lstringu<200> idName{name};
-
-        bool first = true;
-        for (u16symbol *ptr = idName.str(), *end = ptr + idName.length(); ptr < end; ptr++) {
-            if (!(iswalpha(*ptr) || (!first && *ptr >= '0' && *ptr <= '9'))) {
-                *ptr = '_';
-            }
-            first = false;
+        if (name.find('\"') != str_pos::badIdx) {
+            lstringu<200> idName{e_repl<u16symbol>(name, u"\"", u"\"\"")};
+            vtText << (eeu & u"{" & currentCol & u",\"" & idName & u"\",{\"Pattern\"},\"" & idName & u"\",0},");
+        } else {
+            vtText << (eeu & u"{" & currentCol & u",\"" & name & u"\",{\"Pattern\"},\"" & name & u"\",0},");
         }
-        vtText << (eeu & u"{" & currentCol & u",\"" & idName & u"\",{\"Pattern\"},\"" & e_repl<u16symbol>(name, u"\"", u"\"\"") & u"\",0},");
         currentCol++;
     }
     void addRow() {
@@ -332,8 +327,8 @@ static bool execQuery(SqliteQuery& query, tVariant& retVal, hashStrMapUIU<int>& 
         return false;
     }
     if (receiver.colCount) {
-        retVal.vt       = VTYPE_PWSTR;
-        retVal.wstrLen  = (int)text.length();
+        retVal.vt      = VTYPE_PWSTR;
+        retVal.wstrLen = (int)text.length();
         mm->AllocMemory((void**)&retVal.pwstrVal, (int)(text.length() + 1) * 2);
 
         *text.place(retVal.pwstrVal) = 0;
@@ -361,7 +356,7 @@ bool V8SqliteAddin::ExecQuery(tVariant& retVal, tVariant* params, unsigned count
     if (params[2].vt != VTYPE_NULL) {
         if (params[2].vt == VTYPE_PWSTR) {
             auto vals = varToTextU(params[2]).splitf<std::vector<ssu>>(u",", [](ssu& t) { t = t.trimmed(); });
-            for (const auto& v : vals) {
+            for (const auto& v: vals) {
                 dates.emplace(v, 0);
             }
         } else {

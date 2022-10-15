@@ -22,7 +22,7 @@ if (WIN32)
     # Одинаковые флаги для компиляторов MSVC и clang-cl в релизной конфигурации
     set (V8SQLITE_CXX_FLAGS_RELEASE "/O2 /GS- /DNDEBUG" CACHE STRING "")
     # Одинаковые флаги для компиляторов MSVC и clang-cl в отладочной конфигурации
-    set (V8SQLITE_CXX_FLAGS_DEBUG "/Zi /Ob0 /Od /RTC1" CACHE STRING "")
+    set (V8SQLITE_CXX_FLAGS_DEBUG "/Zi /Ob0 /Od /D_DEBUG /RTC1" CACHE STRING "")
     # Флаги только для компилятора MSVC в релизной конфигурации
     set (V8SQLITE_CXX_MSVC_RELEASE "/GL" CACHE STRING "")
     # Флаги только для компилятора MSVC в отладочной конфигурации
