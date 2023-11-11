@@ -23,7 +23,7 @@ void SqliteBase::close() {
 }
 
 int SqliteBase::exec(stru query) {
-    return db_ ? sqlite3_exec(db_, lstringa<200>{query}, nullptr, nullptr, nullptr) : SQLITE_ERROR;
+    return db_ ? sqlite3_exec(db_, lstringa<1024>{query}, nullptr, nullptr, nullptr) : SQLITE_ERROR;
 }
 
 SqliteQuery SqliteBase::prepare(stru query) {
@@ -84,10 +84,10 @@ tm winDateToTm(double winDate) {
 }
 
 expr_json_str::expr_json_str(ssu t) : text(t), l(text.len) {
-    const u16symbol* ptr = text.symbols();
+    const u16s* ptr = text.symbols();
 
     for (size_t i = 0; i < text.length(); i++) {
-        u16symbol s = *ptr++;
+        u16s s = *ptr++;
         switch (s) {
         case '\b':
         case '\f':
@@ -104,10 +104,10 @@ expr_json_str::expr_json_str(ssu t) : text(t), l(text.len) {
     }
 }
 
-core_as::str::u16symbol* expr_json_str::place(u16symbol* ptr) const noexcept {
-    const u16symbol *r = text.symbols(), *end = r + text.length();
+core_as::str::u16s* expr_json_str::place(u16s* ptr) const noexcept {
+    const u16s *r = text.symbols(), *end = r + text.length();
     while (r < end) {
-        u16symbol s = *r++;
+        u16s s = *r++;
         switch (s) {
         case '\b':
             *ptr++ = '\\';
@@ -149,8 +149,8 @@ expr_str_base64::expr_str_base64(ssa t) : text(t) {
     l = (text.len + 2) / 3 * 4;
 }
 
-u16symbol* expr_str_base64::place(u16symbol* ptr) const noexcept {
-    static constexpr u8symbol alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+u16s* expr_str_base64::place(u16s* ptr) const noexcept {
+    static constexpr u8s alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     const unsigned char* t = (const unsigned char*)text.str;
 
@@ -178,7 +178,7 @@ u16symbol* expr_str_base64::place(u16symbol* ptr) const noexcept {
     return ptr;
 }
 
-core_as::str::u16symbol* expr_str_tm::place(u16symbol* ptr) const noexcept {
+core_as::str::u16s* expr_str_tm::place(u16s* ptr) const noexcept {
     if constexpr (sizeof(wchar_t) == 2) {
         std::swprintf((wchar_t*)ptr, 20, L"%04i-%02i-%02i %02i:%02i:%02i", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
     } else {

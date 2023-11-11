@@ -16,7 +16,7 @@ long GetClassObject(const WCHAR_T* wsName, IComponentBase** pInterface) {
                 break;
             }
         }
-        return pInterface != nullptr;
+        return *pInterface != nullptr;
     }
     return 0;
 }

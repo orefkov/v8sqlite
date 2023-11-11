@@ -74,7 +74,7 @@ struct SimpleResultReceiver {
         if (db) {
             lastId_     = sqlite3_last_insert_rowid(db);
             changes_    = sqlite3_changes64(db);
-            errMessage_ = stru{(const u16symbol*)sqlite3_errmsg16(db)};
+            errMessage_ = stru{(const u16s*)sqlite3_errmsg16(db)};
         }
     }
     struct value {
@@ -98,11 +98,11 @@ struct SimpleResultReceiver {
             }
         }
         value(const value&) = delete;
-        value(value&& other) {
+        value(value&& other) noexcept {
             memcpy(this, &other, sizeof(*this));
             other.type = Type::Null;
         }
-        value& operator=(value other) {
+        value& operator=(value other) noexcept {
             this->~value();
             new (this) value(std::move(other));
             return *this;
@@ -125,6 +125,7 @@ struct SimpleResultReceiver {
 
     void addRow() {
         rows.emplace_back();
+        rows.back().reserve(columns.size());
     }
     void addNull() {
         rows.back().emplace_back();

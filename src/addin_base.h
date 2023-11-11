@@ -75,8 +75,8 @@ public:
         memoryManager_->AllocMemory(reinterpret_cast<void**>(&destination), (unsigned long)size * sizeof(T));
         return destination;
     }
-    WCHAR_T* copyText(ssu text) const {
-        WCHAR_T* destination     = v8alloc<WCHAR_T>(text.len + 1);
+    WCHAR_T* copyText(auto&& text) const {
+        WCHAR_T* destination     = v8alloc<WCHAR_T>(text.length() + 1);
         *text.place(destination) = 0;
         return destination;
     }
@@ -666,7 +666,10 @@ public:
         return d().init();
     }
     bool error(stru rus, stru eng) {
-        lastError_ = selectLocaleStr(rus, eng);
+        return error(selectLocaleStr(rus, eng));
+    }
+    bool error(auto&& err) {
+        lastError_ = err;
         if (throwErrors_) {
             v8connection_->AddError(ADDIN_E_FAIL, ImplType::ExtensionName.symbols(), lastError_, 0);
         }

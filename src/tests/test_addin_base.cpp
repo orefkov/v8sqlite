@@ -235,7 +235,7 @@ void testCreate(stru name) {
     MemoryManager mm;
     addin->setMemManager(&mm);
 
-    u16symbol* addinName;
+    u16s* addinName;
     addin->RegisterExtensionAs(&addinName);
     EXPECT_EQ(stru{addinName}, name);
     mm.free(addinName);

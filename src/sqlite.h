@@ -22,10 +22,10 @@ class SqliteBase {
 public:
     SqliteBase() = default;
     SqliteBase(const SqliteBase&) = delete;
-    SqliteBase(SqliteBase&& other) : db_(other.db_) {
+    SqliteBase(SqliteBase&& other) noexcept : db_(other.db_) {
         other.db_ = nullptr;
     }
-    SqliteBase& operator=(SqliteBase other) {
+    SqliteBase& operator=(SqliteBase other) noexcept {
         this->~SqliteBase();
         new (this) SqliteBase(std::move(other));
         return *this;
@@ -42,7 +42,7 @@ public:
     void close();
     int exec(stru query);
     stru lastError() const {
-        return stru{ db_ ? (const u16symbol*)sqlite3_errmsg16(db_) : nullptr};
+        return stru{ db_ ? (const u16s*)sqlite3_errmsg16(db_) : nullptr};
     }
     int64_t lastId() const {
         return db_ ? sqlite3_last_insert_rowid(db_) : 0;
@@ -127,15 +127,15 @@ struct db_traits<ssu> {
 };
 
 template<size_t N>
-struct db_traits<u8symbol[N]> {
-    static void bind(sqlite3_stmt* stmt, unsigned idx, const u8symbol (&value)[N]) {
+struct db_traits<u8s[N]> {
+    static void bind(sqlite3_stmt* stmt, unsigned idx, const u8s (&value)[N]) {
         sqlite3_bind_blob(stmt, idx, value, N - 1, 0);
     }
 };
 
 template<size_t N>
-struct db_traits<u16symbol[N]> {
-    static void bind(sqlite3_stmt* stmt, unsigned idx, const u16symbol (&value)[N]) {
+struct db_traits<u16s[N]> {
+    static void bind(sqlite3_stmt* stmt, unsigned idx, const u16s (&value)[N]) {
         sqlite3_bind_text16(stmt, idx, value, (N - 1) * 2, 0);
     }
 };
@@ -159,10 +159,10 @@ public:
 
     SqliteQuery(const SqliteQuery&) = delete;
 
-    SqliteQuery(SqliteQuery&& other) : stmt_(other.stmt_) {
+    SqliteQuery(SqliteQuery&& other) noexcept : stmt_(other.stmt_) {
         other.stmt_ = nullptr;
     }
-    SqliteQuery& operator=(SqliteQuery other) {
+    SqliteQuery& operator=(SqliteQuery other) noexcept {
         std::swap(stmt_, other.stmt_);
         return *this;
     }
@@ -203,7 +203,7 @@ public:
         if (colCount) {
             receiver.setColumnCount(colCount);
             for (unsigned i = 0; i < colCount; i++) {
-                receiver.addColumnName(stru{(const u16symbol*)sqlite3_column_name16(stmt_, i)});
+                receiver.addColumnName(stru{(const u16s*)sqlite3_column_name16(stmt_, i)});
             }
             for (;;) {
                 result = sqlite3_step(stmt_);
@@ -221,10 +221,10 @@ public:
                             receiver.addReal(sqlite3_column_double(stmt_, col));
                             break;
                         case SQLITE_TEXT:
-                            receiver.addText(ssu{(const u16symbol*)sqlite3_column_text16(stmt_, col), size_t(sqlite3_column_bytes16(stmt_, col) / 2)});
+                            receiver.addText(ssu{(const u16s*)sqlite3_column_text16(stmt_, col), size_t(sqlite3_column_bytes16(stmt_, col) / 2)});
                             break;
                         case SQLITE_BLOB:
-                            receiver.addBlob(ssa{(const u8symbol*)sqlite3_column_blob(stmt_, col), size_t(sqlite3_column_bytes(stmt_, col))});
+                            receiver.addBlob(ssa{(const u8s*)sqlite3_column_blob(stmt_, col), size_t(sqlite3_column_bytes(stmt_, col))});
                             break;
                         }
                     }
@@ -247,33 +247,33 @@ double calcJulianDate(double winDate);
 tm winDateToTm(double winDate);
 
 struct expr_json_str {
-    using symb_type = u16symbol;
+    using symb_type = u16s;
     ssu text;
     size_t l;
     size_t length() const noexcept {
         return l;
     }
-    u16symbol* place(u16symbol* ptr) const noexcept;
+    u16s* place(u16s* ptr) const noexcept;
     expr_json_str(ssu t);
 };
 
 struct expr_str_base64 {
-    using symb_type = u16symbol;
+    using symb_type = u16s;
     ssa text;
     size_t l;
     size_t length() const noexcept {
         return l;
     }
-    u16symbol* place(u16symbol* ptr) const noexcept;
+    u16s* place(u16s* ptr) const noexcept;
     expr_str_base64(ssa t);
 };
 
 struct expr_str_tm {
-    using symb_type = u16symbol;
+    using symb_type = u16s;
     const tm& t;
     size_t length() const noexcept {
         return 19;
     }
-    u16symbol* place(u16symbol* ptr) const noexcept;
+    u16s* place(u16s* ptr) const noexcept;
     expr_str_tm(const tm& _t) : t(_t) {}
 };

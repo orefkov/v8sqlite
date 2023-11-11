@@ -161,7 +161,7 @@ int to_int(const std::string_view& s) {
     return i3;
 }
 
-template<StrType<u8symbol> T>
+template<StrType<u8s> T>
 int to_int(const T& t) {
     if (t.at(0) > '9') {
         auto r = t. template toInt<int, true, 16, false>();

@@ -24,7 +24,7 @@ public:
     bool isSharedString() const { return type == Shared; }
 
     size_t sharedCount() const {
-        return type == Shared ? SharedStringData<u8symbol>::from_str(sstr)->ref.load() : 0u;
+        return type == Shared ? SharedStringData<u8s>::from_str(sstr)->ref.load() : 0u;
     }
 };
 
@@ -875,7 +875,7 @@ TEST(CoreAsStr, LStringCreatePad) {
 }
 
 TEST(CoreAsStr, LStringCreateExpr) {
-    lstringa<40> test{"test" & e_num<u8symbol>(10) & "-" & 20 & e_spca<3>()};
+    lstringa<40> test{"test" & e_num<u8s>(10) & "-" & 20 & e_spca<3>()};
     EXPECT_FALSE(test.isEmpty());
     EXPECT_EQ(test, "test10-20   ");
 }
@@ -1244,6 +1244,12 @@ TEST(CoreAsStr, LStrFormatExpressions) {
     EXPECT_EQ(buffer, "99>as__1,>fgh<>jkl");
 }
 
+TEST(CoreAsStr, LStrVFormat){
+    ssa t1 = "text1", t2 = "text2";
+    auto res = lstringa<4>{}.vformat("{}{}{}", t1, t2, 4);
+    EXPECT_EQ(res, "text1text24");
+}
+
 TEST(CoreAsStr, SStrFormat) {
     EXPECT_EQ(stringa::printf("%s%i", "test", 10), "test10");
     EXPECT_EQ(stringa::format("{}{}", "test", 10), "test10");
@@ -1270,23 +1276,23 @@ TEST(CoreAsStr, HashMap) {
     EXPECT_EQ(fnv_hash_ia(u"asdFghjkl"), fnv_hash_ia_compile(_S(u"asdFGhjkl")));
     EXPECT_EQ(fnv_hash_ia(L"asDfghjkl"), fnv_hash_ia_compile(_S(u"asdFGhjkl")));
 
-    EXPECT_EQ(fnv_hash_ia( "asdfGhjkl"), unicode_traits<u8symbol> ::hashia(_S( "asDFghjkl")));
-    EXPECT_EQ(fnv_hash_ia(u"asdfghJkl"), unicode_traits<u16symbol>::hashia(_S(u"asDFghjkl")));
-    EXPECT_EQ(fnv_hash_ia(U"asDFghJkl"), unicode_traits<u32symbol>::hashia(_S(U"asdFGhjkl")));
+    EXPECT_EQ(fnv_hash_ia( "asdfGhjkl"), unicode_traits<u8s> ::hashia(_S( "asDFghjkl")));
+    EXPECT_EQ(fnv_hash_ia(u"asdfghJkl"), unicode_traits<u16s>::hashia(_S(u"asDFghjkl")));
+    EXPECT_EQ(fnv_hash_ia(U"asDFghJkl"), unicode_traits<u32s>::hashia(_S(U"asdFGhjkl")));
 
-    EXPECT_EQ(unicode_traits<u8symbol>:: hashia(_S( "asDFghjkl")),
-              unicode_traits<u8symbol>:: hashia(_S( "Asdfghjkl")));
-    EXPECT_EQ(unicode_traits<u16symbol>::hashia(_S(u"asdFGhjkl")),
-              unicode_traits<u16symbol>::hashia(_S(u"aSDfghjkl")));
-    EXPECT_EQ(unicode_traits<u32symbol>::hashia(_S(U"asdfGhjkl")),
-              unicode_traits<u32symbol>::hashia(_S(U"asDfghjkl")));
+    EXPECT_EQ(unicode_traits<u8s>:: hashia(_S( "asDFghjkl")),
+              unicode_traits<u8s>:: hashia(_S( "Asdfghjkl")));
+    EXPECT_EQ(unicode_traits<u16s>::hashia(_S(u"asdFGhjkl")),
+              unicode_traits<u16s>::hashia(_S(u"aSDfghjkl")));
+    EXPECT_EQ(unicode_traits<u32s>::hashia(_S(U"asdfGhjkl")),
+              unicode_traits<u32s>::hashia(_S(U"asDfghjkl")));
 
-    EXPECT_EQ(unicode_traits<u8symbol>:: hashiu(_S( "asDFghjklРус")),
-              unicode_traits<u8symbol>:: hashiu(_S( "AsdfghjklрУС")));
-    EXPECT_EQ(unicode_traits<u16symbol>::hashiu(_S(u"asdFGhjklРус")),
-              unicode_traits<u16symbol>::hashiu(_S(u"aSDfghjklрУС")));
-    EXPECT_EQ(unicode_traits<u32symbol>::hashiu(_S(U"asdfGhjklРус")),
-              unicode_traits<u32symbol>::hashiu(_S(U"asDfghjklрУС")));
+    EXPECT_EQ(unicode_traits<u8s>:: hashiu(_S( "asDFghjklРус")),
+              unicode_traits<u8s>:: hashiu(_S( "AsdfghjklрУС")));
+    EXPECT_EQ(unicode_traits<u16s>::hashiu(_S(u"asdFGhjklРус")),
+              unicode_traits<u16s>::hashiu(_S(u"aSDfghjklрУС")));
+    EXPECT_EQ(unicode_traits<u32s>::hashiu(_S(U"asdfGhjklРус")),
+              unicode_traits<u32s>::hashiu(_S(U"asDfghjklрУС")));
 
     {
         hashStrMapA<int> test = {

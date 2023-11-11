@@ -26,15 +26,16 @@
 #endif
 
 
-enum class LogLevel {
-    Critical,
-    Warning,
-    Normal,
-    Info,
-    Diagnostic
-};
-
 COREAS_API void* core_as_malloc(size_t count);
 COREAS_API void* core_as_realloc(void* ptr, size_t count);
 COREAS_API void core_as_free(void* ptr);
 COREAS_API void core_as_print(const wchar_t* text);
+
+const bool isWindowsOs = // NOLINT
+#ifdef _WIN32
+    true
+#else
+    false
+#endif
+    ;
+const bool isx64 = sizeof(void*) == 8; // NOLINT

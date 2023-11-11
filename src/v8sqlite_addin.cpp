@@ -133,8 +133,9 @@ bool V8SqliteAddin::BindParam(tVariant* params, unsigned count) {
 
     SqliteQuery& query = find->second;
 
-    int paramNum =
-        params[1].vt == VTYPE_PWSTR ? sqlite3_bind_parameter_index(query, lstringa<100>{varToTextU(params[1])}) : getInteger(params[1]);
+    int paramNum = params[1].vt == VTYPE_PWSTR
+        ? sqlite3_bind_parameter_index(query, lstringa<100>{varToTextU(params[1])})
+        : getInteger(params[1]);
 
     if (!paramNum || paramNum > sqlite3_bind_parameter_count(query)) {
         return error(u"Неверный параметр запроса", u"Bad query param");
@@ -148,7 +149,7 @@ bool V8SqliteAddin::BindParam(tVariant* params, unsigned count) {
 }
 
 struct ToTextReceiver {
-    chunked_string_concatenator<u16symbol>& vtText;
+    chunked_string_builder<u16s>& vtText;
     hashStrMapUIU<int>& datesColumns;
     std::vector<char> dates;
     unsigned currentCol{0};
@@ -172,11 +173,11 @@ struct ToTextReceiver {
         }
     }
 
-    ToTextReceiver(chunked_string_concatenator<u16symbol>& t, hashStrMapUIU<int>& d) : vtText(t), datesColumns(d) {}
+    ToTextReceiver(chunked_string_builder<u16s>& t, hashStrMapUIU<int>& d) : vtText(t), datesColumns(d) {}
 };
 
 struct ValueTableReceiver : ToTextReceiver {
-    ValueTableReceiver(chunked_string_concatenator<u16symbol>& t, hashStrMapUIU<int>& d) : ToTextReceiver(t, d) {}
+    using ToTextReceiver::ToTextReceiver;
 
     unsigned rowCount{0};
     unsigned startOfRowCount = 0;
@@ -189,13 +190,14 @@ struct ValueTableReceiver : ToTextReceiver {
     void addColumnName(ssu name) {
         checkColumnForDates(name);
         if (name.find('\"') != str_pos::badIdx) {
-            lstringu<200> idName{e_repl<u16symbol>(name, u"\"", u"\"\"")};
+            lstringu<200> idName{e_repl<u16s>(name, u"\"", u"\"\"")};
             vtText << (eeu & u"{" & currentCol & u",\"" & idName & u"\",{\"Pattern\"},\"" & idName & u"\",0},");
         } else {
             vtText << (eeu & u"{" & currentCol & u",\"" & name & u"\",{\"Pattern\"},\"" & name & u"\",0},");
         }
         currentCol++;
     }
+    enum {SpaceForRowCount = 20};
     void addRow() {
         if (rowCount == 0) {
             vtText << (eeu & u"},{2," & colCount & u",");
@@ -204,7 +206,7 @@ struct ValueTableReceiver : ToTextReceiver {
             }
             vtText << u"{1,";
             startOfRowCount = (int)vtText.length();
-            vtText << (expr_spaces<u16symbol, 20>{} & u",");
+            vtText << (expr_spaces<u16s, SpaceForRowCount>{} & u",");
         } else {
             vtText << u"0},";
         }
@@ -221,20 +223,24 @@ struct ValueTableReceiver : ToTextReceiver {
         currentCol++;
     }
     void addReal(double v) {
-        lstringa<40> va = eea & v;
-        vtText << (eeu & u"{\"N\"," & lstringu<40>{va} & u"},");
+        if constexpr (sizeof(wchar_t) == 2) {
+            vtText << (eeu & u"{\"N\"," & v & u"},");
+        } else {
+            lstringa<40> va = eea & v;
+            vtText << (u"{\"N\"," & lstringu<40>{va} & u"},");
+        }
         currentCol++;
     }
     void addText(ssu v) {
         if (dates[currentCol] && v.len == 19) {
-            vtText << (eeu & u"{\"D\"," & v(0, 4) & v(5, 2) & v(8, 2) & v(11, 2) & v(14, 2) & v(17, 2) & u"},");
+            vtText << (u"{\"D\"," & v(0, 4) & v(5, 2) & v(8, 2) & v(11, 2) & v(14, 2) & v(17, 2) & u"},");
         } else {
-            vtText << (eeu & u"{\"S\",\"" & e_repl(v, u"\"", u"\"\"") & u"\"},");
+            vtText << (u"{\"S\",\"" & e_repl(v, u"\"", u"\"\"") & u"\"},");
         }
         currentCol++;
     }
     void addBlob(ssa v) {
-        vtText << (eeu & u"{\"#\",87126200-3e98-44e0-b931-ccb1d7edc497,{1,{#base64:" & expr_str_base64(v) & u"}}},");
+        vtText << (u"{\"#\",87126200-3e98-44e0-b931-ccb1d7edc497,{1,{#base64:" & expr_str_base64(v) & u"}}},");
         currentCol++;
     }
     void setResult(int e, sqlite3* db) {
@@ -253,14 +259,14 @@ struct ValueTableReceiver : ToTextReceiver {
 
     void fixAnswer(WCHAR_T* answer) const {
         if (rowCount) {
-            lstringu<40> rc = eeu & rowCount;
-            rc.place(answer + startOfRowCount);
+            fromInt(answer + startOfRowCount + SpaceForRowCount, rowCount);
         }
     }
 };
 
 struct JsonReceiver : ToTextReceiver {
-    JsonReceiver(chunked_string_concatenator<u16symbol>& t, hashStrMapUIU<int>& d) : ToTextReceiver(t, d) {}
+    using ToTextReceiver::ToTextReceiver;
+
     void fixAnswer(WCHAR_T* answer) {}
 
     void setColumnCount(unsigned cc) {
@@ -278,7 +284,7 @@ struct JsonReceiver : ToTextReceiver {
 
     void addColumnName(ssu name) {
         checkColumnForDates(name);
-        vtText << (eeu & uR"({"#type":"jxs:string","#value":")" & expr_json_str(name) & u"\"}");
+        vtText << (uR"({"#type":"jxs:string","#value":")" & expr_json_str(name) & u"\"}");
         addDelim();
     }
     void addRow() {
@@ -294,20 +300,24 @@ struct JsonReceiver : ToTextReceiver {
         addDelim();
     }
     void addReal(double v) {
-        lstringa<40> va = eea & v;
-        vtText << (eeu & uR"({"#type":"jxs:decimal","#value":)" & lstringu<40>{va} & u"}");
+        if constexpr (sizeof(wchar_t) == 2) {
+            vtText << (eeu & uR"({"#type":"jxs:decimal","#value":)" & v & u"}");
+        } else {
+            lstringa<40> va = eea & v;
+            vtText << (uR"({"#type":"jxs:decimal","#value":)" & lstringu<40>{va} & u"}");
+        }
         addDelim();
     }
     void addText(ssu v) {
         if (dates[currentCol] && v.len == 19) {
-            vtText << (eeu & uR"({"#type":"jxs:dateTime","#value":")" & v(0, 10) & u'T' & v(11) & u"\"}");
+            vtText << (uR"({"#type":"jxs:dateTime","#value":")" & v(0, 10) & u'T' & v(11) & u"\"}");
         } else {
-            vtText << (eeu & uR"({"#type":"jxs:string","#value":")" & expr_json_str(v) & u"\"}");
+            vtText << (uR"({"#type":"jxs:string","#value":")" & expr_json_str(v) & u"\"}");
         }
         addDelim();
     }
     void addBlob(ssa v) {
-        vtText << (eeu & uR"({"#type":"jxs:base64Binary","#value":")" & expr_str_base64(v) & u"\"}");
+        vtText << (uR"({"#type":"jxs:base64Binary","#value":")" & expr_str_base64(v) & u"\"}");
         addDelim();
     }
     void setResult(int e, sqlite3* db) {
@@ -320,7 +330,7 @@ struct JsonReceiver : ToTextReceiver {
 
 template<typename T>
 static bool execQuery(SqliteQuery& query, tVariant& retVal, hashStrMapUIU<int>& dates, IMemoryManager* mm) {
-    chunked_string_concatenator<u16symbol> text;
+    chunked_string_builder<u16s> text;
     T receiver(text, dates);
     query.exec(receiver);
     if (SQLITE_DONE != receiver.error) {
@@ -402,9 +412,5 @@ bool V8SqliteAddin::RemoveQuery(tVariant* params, unsigned count) {
 }
 
 bool V8SqliteAddin::reportDbError() {
-    lastError_ = selectLocaleStr(u"Произошла ошибка базы данных", u"Database error") & u": " & db_.lastError();
-    if (throwErrors_) {
-        v8connection_->AddError(ADDIN_E_FAIL, ImplType::ExtensionName.symbols(), lastError_, 0);
-    }
-    return false;
+    return error(selectLocaleStr(u"Произошла ошибка базы данных", u"Database error") & u": " & db_.lastError());
 }

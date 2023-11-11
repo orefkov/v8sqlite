@@ -3,40 +3,29 @@
 * База для строковых конкатенаций через выражения времени компиляции
 */
 #pragma once
-#include <uchar.h>
-#include <algorithm>
 #include <string_view>
+#include <type_traits>
 
 namespace core_as::str {
 
 // Выводим типы для 16 и 32 битных символов взависимости от размера wchar_t
-template<size_t N>
-struct _wchar_type {
-    using type = char32_t;
-};
+using wchar_type = std::conditional<sizeof(wchar_t) == 2, char16_t, char32_t>::type;
 
-template<>
-struct _wchar_type<2> {
-    using type = char16_t; // Для совместимости с Windows
-};
-
-using wchar_type = _wchar_type<sizeof(wchar_t)>::type;
-
-static wchar_type* to_w(wchar_t* p) {
+inline wchar_type* to_w(wchar_t* p) {
     return (reinterpret_cast<wchar_type*>(p));
 }
 
-static const wchar_type* to_w(const wchar_t* p) {
+inline const wchar_type* to_w(const wchar_t* p) {
     return (reinterpret_cast<const wchar_type*>(p));
 }
 
-using u8symbol = char;
-using uwsymbol = wchar_t;
-using u16symbol = char16_t;
-using u32symbol = char32_t;
+using u8s = char;
+using uws = wchar_t;
+using u16s = char16_t;
+using u32s = char32_t;
 
 //using size_t = size_t;// unsigned int;
-using uu8symbol = std::make_unsigned<u8symbol>::type;
+using uu8s = std::make_unsigned<u8s>::type;
 
 template<typename A, typename K>
 concept StrType = requires(const A& a) {
@@ -78,7 +67,7 @@ struct strexprjoin {
 };
 
 template<StrExpr A, StrExprForType<typename A::symb_type> B>
-static auto operator & (const A& a, const B& b) {
+inline auto operator & (const A& a, const B& b) {
     return strexprjoin<A, B>{a, b};
 }
 
@@ -108,10 +97,10 @@ struct empty_expr {
     constexpr symb_type* place(symb_type* p) const noexcept { return p; }
 };
 
-inline constexpr empty_expr<u8symbol>  eea{};
-inline constexpr empty_expr<wchar_t>   eew{};
-inline constexpr empty_expr<u16symbol> eeu{};
-inline constexpr empty_expr<u32symbol> eeuu{};
+inline constexpr empty_expr<u8s>  eea{};
+inline constexpr empty_expr<uws>  eew{};
+inline constexpr empty_expr<u16s> eeu{};
+inline constexpr empty_expr<u32s> eeuu{};
 
 template<typename K>
 struct expr_char {
@@ -126,7 +115,7 @@ struct expr_char {
 };
 
 template<typename K, StrExprForType<K> A>
-constexpr static auto operator & (const A& a, K s) {
+constexpr inline auto operator & (const A& a, K s) {
     return strexprjoin_c<A, expr_char<K>>{ a, s };
 }
 
@@ -143,7 +132,7 @@ struct expr_literal {
 };
 
 template<typename K, size_t N>
-constexpr static auto e_t(const K(&s)[N]) {
+constexpr inline auto e_t(const K(&s)[N]) {
     return expr_literal<K, static_cast<size_t>(N - 1)>{ s };
 }
 
@@ -173,12 +162,12 @@ struct expr_literal_join {
 };
 
 template<typename K, StrExprForType<K> A, size_t N>
-constexpr static auto operator & (const A& a, const K(&s)[N]) {
+constexpr inline auto operator & (const A& a, const K(&s)[N]) {
     return expr_literal_join<false, K, (N - 1), A>{ s, a };
 }
 
 template<typename K, StrExprForType<K> A, size_t N>
-constexpr static auto operator & (const K(&s)[N], const A& a) {
+constexpr inline auto operator & (const K(&s)[N], const A& a) {
     return expr_literal_join<true, K, (N - 1), A>{ s, a };
 }
 
@@ -194,13 +183,13 @@ struct expr_spaces {
 };
 
 template<size_t N>
-constexpr static auto e_spca() {
-    return expr_spaces<u8symbol, N>();
+constexpr inline auto e_spca() {
+    return expr_spaces<u8s, N>();
 }
 
 template<size_t N>
-constexpr static auto e_spcw() {
-    return expr_spaces<u16symbol, N>();
+constexpr inline auto e_spcw() {
+    return expr_spaces<uws, N>();
 }
 
 template<typename K>
@@ -217,7 +206,7 @@ struct expr_pad {
 };
 
 template<typename K>
-constexpr static auto e_c(K s, size_t l) {
+constexpr inline auto e_c(K s, size_t l) {
     return expr_pad<K>{ s, l };
 }
 
