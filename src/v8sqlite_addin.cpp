@@ -190,7 +190,7 @@ struct ValueTableReceiver : ToTextReceiver {
     void addColumnName(ssu name) {
         checkColumnForDates(name);
         if (name.find('\"') != str_pos::badIdx) {
-            lstringu<200> idName{e_repl<u16s>(name, u"\"", u"\"\"")};
+            lstringu<200> idName{e_repl(name, u"\"", u"\"\"")};
             vtText << (eeu & u"{" & currentCol & u",\"" & idName & u"\",{\"Pattern\"},\"" & idName & u"\",0},");
         } else {
             vtText << (eeu & u"{" & currentCol & u",\"" & name & u"\",{\"Pattern\"},\"" & name & u"\",0},");

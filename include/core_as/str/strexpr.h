@@ -24,7 +24,6 @@ using uws = wchar_t;
 using u16s = char16_t;
 using u32s = char32_t;
 
-//using size_t = size_t;// unsigned int;
 using uu8s = std::make_unsigned<u8s>::type;
 
 template<typename A, typename K>
