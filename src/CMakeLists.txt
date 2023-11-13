@@ -40,6 +40,7 @@ else ()
         target_link_options(${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++)
     endif ()
     target_link_options(${PROJECT_NAME} PRIVATE -Wl,--no-undefined -Xlinker --version-script -Xlinker ${CMAKE_CURRENT_SOURCE_DIR}/version.script)
+    target_link_libraries(${PROJECT_NAME} pthread)
 endif()
 
 set_target_properties( ${PROJECT_NAME} PROPERTIES

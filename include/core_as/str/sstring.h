@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <tuple>
 #include <limits>
+#include <string.h>
 
 #ifdef _MSC_VER
 // warning C4201 : nonstandard extension used : nameless struct / union

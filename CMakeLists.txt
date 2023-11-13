@@ -12,7 +12,7 @@ endif ()
 
 option(V8SQLITE_STATIC_RUNTIME "Подключать рантайм-библиотеки статически" ON)
 option(V8SQLITE_BUILD_TESTS "Построить тесты" ON)
-option(V8SQLITE_BENCHMARKS "Построить замеры производительности" ON)
+option(V8SQLITE_BENCHMARKS "Построить замеры производительности" OFF)
 
 # Установим дефолтные значения
 if (WIN32)
@@ -43,7 +43,7 @@ if (WIN32)
 
 elseif (UNIX)
     # Флаги для компилятора clang++ во всех конфигурациях
-    set (V8SQLITE_CXX_CLANG_FLAGS "-fPIC -std=c++20 -fexperimental-library -DLIBCXX_ENABLE_INCOMPLETE_FEATURES=ON -stdlib=libc++" CACHE STRING "")
+    set (V8SQLITE_CXX_CLANG_FLAGS "-fPIC -std=c++20 -fexperimental-library -DLIBCXX_ENABLE_INCOMPLETE_FEATURES=ON -stdlib=libstdc++" CACHE STRING "")
     # Флаги для компилятора clang во всех конфигурациях
     set (V8SQLITE_C_CLANG_FLAGS "-fPIC" CACHE STRING "")
     # Флаги для компилятора clang в релизной конфигурации

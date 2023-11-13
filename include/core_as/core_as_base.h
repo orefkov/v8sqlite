@@ -4,6 +4,9 @@
 */
 #pragma once
 #include <cstdlib>
+#include <cstdint>
+#include <atomic>
+#include <memory>
 
 #ifndef __has_declspec_attribute
 #define __has_declspec_attribute(x) 0
