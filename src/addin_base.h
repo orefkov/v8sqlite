@@ -83,7 +83,7 @@ public:
 
 protected:
     stru selectLocaleStr(stru rus, stru eng) {
-        return locale_.starts_with(u"ru") ? rus : eng;
+        return uiLanguageCode_.starts_with_ia(u"ru") || locale_.starts_with_ia(u"ru") ? rus : eng;
     }
     IAddInDefBaseEx* v8connection_{nullptr};
     IMemoryManager* memoryManager_{nullptr};
