@@ -1,7 +1,5 @@
-﻿#include "sqlite.h"
-#include "stdafx.h"
-#include <vcruntime.h>
-#include <string>
+﻿#include "stdafx.h"
+#include "sqlite.h"
 
 extern "C" int sqlite3_unicode_init(sqlite3* db);
 

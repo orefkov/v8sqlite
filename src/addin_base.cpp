@@ -1,5 +1,4 @@
-﻿#include "core_as/str/sstring.h"
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "addin_base.h"
 
 namespace {
