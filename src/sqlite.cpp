@@ -1,5 +1,7 @@
 ﻿#include "sqlite.h"
 #include "stdafx.h"
+#include <vcruntime.h>
+#include <string>
 
 extern "C" int sqlite3_unicode_init(sqlite3* db);
 
@@ -23,7 +25,7 @@ void SqliteBase::close() {
 }
 
 int SqliteBase::exec(stru query) {
-    return db_ ? sqlite3_exec(db_, lstringa<1024>{query}, nullptr, nullptr, nullptr) : SQLITE_ERROR;
+    return db_ ? sqlite3_exec(db_, lstringa<4096>{query}, nullptr, nullptr, nullptr) : SQLITE_ERROR;
 }
 
 SqliteQuery SqliteBase::prepare(stru query) {
@@ -83,12 +85,12 @@ tm winDateToTm(double winDate) {
     return t;
 }
 
-expr_json_str::expr_json_str(ssu t) : text(t), l(text.len) {
+expr_json_str::expr_json_str(ssu t) : text(t) {
     const u16s* ptr = text.symbols();
+    size_t add = 0;
 
     for (size_t i = 0; i < text.length(); i++) {
-        u16s s = *ptr++;
-        switch (s) {
+        switch (*ptr++) {
         case '\b':
         case '\f':
         case '\r':
@@ -96,51 +98,63 @@ expr_json_str::expr_json_str(ssu t) : text(t), l(text.len) {
         case '\t':
         case '\"':
         case '\\':
-            l++;
-            break;
-        default:
-            break;
+            add++;
         }
     }
+    l = text.len + add;
 }
 
 core_as::str::u16s* expr_json_str::place(u16s* ptr) const noexcept {
-    const u16s *r = text.symbols(), *end = r + text.length();
-    while (r < end) {
+    const u16s *r = text.symbols();
+    size_t lenOfText = text.length(), lenOfTail = l;
+    while (lenOfTail > lenOfText) {
         u16s s = *r++;
         switch (s) {
         case '\b':
             *ptr++ = '\\';
             *ptr++ = 'b';
+            lenOfTail--;
             break;
         case '\f':
             *ptr++ = '\\';
             *ptr++ = 'f';
+            lenOfTail--;
             break;
         case '\r':
             *ptr++ = '\\';
             *ptr++ = 'r';
+            lenOfTail--;
             break;
         case '\n':
             *ptr++ = '\\';
             *ptr++ = 'n';
+            lenOfTail--;
             break;
         case '\t':
             *ptr++ = '\\';
             *ptr++ = 't';
+            lenOfTail--;
             break;
         case '\"':
             *ptr++ = '\\';
             *ptr++ = '\"';
+            lenOfTail--;
             break;
         case '\\':
             *ptr++ = '\\';
             *ptr++ = '\\';
+            lenOfTail--;
             break;
         default:
             *ptr++ = s;
             break;
         }
+        lenOfTail--;
+        lenOfText--;
+    }
+    if (lenOfTail) {
+        std::char_traits<u16s>::copy(ptr, r, lenOfTail);
+        ptr += lenOfTail;
     }
     return ptr;
 }

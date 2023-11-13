@@ -98,18 +98,9 @@ struct AddinInfo {
     IComponentBase* (*create)();
     AddinInfo* next;
     inline static AddinInfo* first{nullptr};
-    static lstringu<100>& classes() {
-        static lstringu<100> cl;
-        return cl;
-    }
 
     AddinInfo(ssu n, IComponentBase* (*c)()) : name(n), create(c), next(first) {
-        first    = this;
-        auto& cl = classes();
-        if (!cl.isEmpty()) {
-            cl += u"|";
-        }
-        cl += name;
+        first = this;
     }
 };
 

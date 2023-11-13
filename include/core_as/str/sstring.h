@@ -150,7 +150,7 @@ concept FromIntNumber =
 template<typename T>
 concept ToIntNumber = FromIntNumber<T> || is_one_of_type<T, int8_t, uint8_t>::value;
 
-#if _MSC_VER <= 1933
+#if defined(_MSC_VER) && _MSC_VER <= 1933
 template<typename K, typename... Args>
 using FmtString = std::_Basic_format_string<K, std::type_identity_t<Args>...>;
 #elif __clang_major__ >= 15 || _MSC_VER > 1933
@@ -307,6 +307,8 @@ public:
         return {0, IntConvertResult::NotNumber, ptr - start};
     }
 };
+
+template<typename K> class Splitter;
 
 /*
 * Класс с базовыми строковыми алгоритмами
@@ -665,6 +667,8 @@ public:
         return splitf<T>(delimeter.symbols(), delimeter.length(), 0, offset);
     }
 
+    Splitter<K> splitter(StrPiece delimeter) const;
+
     // Начинается ли эта строка с указанной подстроки
     constexpr bool starts_with(const K* prefix, size_t l) const noexcept {
         return _len() >= l && 0 == traits::compare(_str(), prefix, l);
@@ -992,6 +996,40 @@ using stra = SimpleStrNt<u8s>;
 using strw = SimpleStrNt<wchar_t>;
 using stru = SimpleStrNt<u16s>;
 using struu = SimpleStrNt<u16s>;
+
+template<typename K>
+class Splitter {
+    SimpleStr<K> text_;
+    SimpleStr<K> delim_;
+
+public:
+    Splitter(SimpleStr<K> text, SimpleStr<K> delim) : text_(text), delim_(delim) {}
+
+    bool isDone() const {
+        return text_.length() == 0;
+    }
+
+    SimpleStr<K> next() {
+        if (!text_.length()) {
+            return text_;
+        }
+        size_t pos = text_.find(delim_), next = 0;
+        if (pos == str_pos::badIdx) {
+            next = pos = text_.length();
+        } else {
+            next = pos + delim_.length();
+        }
+        SimpleStr<K> result{text_.str, pos};
+        text_.str += next;
+        text_.len -= next;
+        return result;
+    }
+};
+
+template<typename K, typename StrRef, typename Impl>
+Splitter<K> str_algs<K, StrRef, Impl>::splitter(StrRef delimeter) const {
+    return Splitter<K>{*this, delimeter};
+}
 
 template<typename K, bool withSpaces>
 struct CheckSpaceTrim {
@@ -1627,7 +1665,7 @@ struct printf_selector<u16s> {
     static int snprintf(u16s* buffer, size_t count, const u16s* format, T&&... args) {
         if constexpr (sizeof(wchar_t) == 2) {
 #ifndef _WIN32
-            return std::swprintf((wchar_t*)buffer, count, (const wchar_t*)format, sta::forward<T>(args)...);
+            return std::swprintf((wchar_t*)buffer, count, (const wchar_t*)format, std::forward<T>(args)...);
 #else
             // Поддерживает позиционные параметры
             return _swprintf_p((wchar_t*)buffer, count, (const wchar_t*)format, std::forward<T>(args)...);
@@ -2173,11 +2211,19 @@ public:
         size_t capacity = d().capacity();
         K* ptr = str();
 
-        auto result = std::vformat_to(
-            writer{d(), ptr + from, ptr + capacity},
-            std::basic_string_view<K>{pattern.symbols(), pattern.length()},
-            std::make_format_args<std::basic_format_context<std::back_insert_iterator<std::_Fmt_buffer<K>>, K>>(std::forward<T>(args)...));
-        d().setSize(result.ptr - _str());
+        if constexpr (std::is_same_v<K, u8s>) {
+            auto result = std::vformat_to(
+                writer{d(), ptr + from, ptr + capacity},
+                std::basic_string_view<K>{pattern.symbols(), pattern.length()},
+                std::make_format_args(std::forward<T>(args)...));
+            d().setSize(result.ptr - _str());
+        } else {
+            auto result = std::vformat_to(
+                writer{d(), ptr + from, ptr + capacity},
+                std::basic_string_view<K>{pattern.symbols(), pattern.length()},
+                std::make_wformat_args(std::forward<T>(args)...));
+            d().setSize(result.ptr - _str());
+        }
         return d();
     }
     template<typename... T>

@@ -365,9 +365,9 @@ bool V8SqliteAddin::ExecQuery(tVariant& retVal, tVariant* params, unsigned count
 
     if (params[2].vt != VTYPE_NULL) {
         if (params[2].vt == VTYPE_PWSTR) {
-            auto vals = varToTextU(params[2]).splitf<std::vector<ssu>>(u",", [](ssu& t) { t = t.trimmed(); });
-            for (const auto& v: vals) {
-                dates.emplace(v, 0);
+            auto vals = varToTextU(params[2]).splitter(u",");
+            while (!vals.isDone()) {
+                dates.emplace(vals.next().trimmed(), 0);
             }
         } else {
             return error(u"Третий параметр должен быть строкой или отсутствовать", u"Third param must be string or empty");

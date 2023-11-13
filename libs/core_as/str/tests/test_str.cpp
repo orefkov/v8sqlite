@@ -1330,7 +1330,6 @@ TEST(CoreAsStr, HashMap) {
             }
     #endif
         };
-
         
         EXPECT_EQ(test.find("aaa"), test.end());
         EXPECT_EQ(test.find("RUSРУС"), test.end());
@@ -1348,6 +1347,18 @@ TEST(CoreAsStr, HashMap) {
         EXPECT_NE(test.find("RUSРУС"), test.end());
         EXPECT_EQ(test.find("RUSРУС"_iu)->second, 3);
     }
+}
+
+TEST(CoreAsStr, SplitterWork) {
+    Splitter<u8s> splitter{"asdfQQbfjgjQQQQjfjfjf", "QQ"};
+    EXPECT_FALSE(splitter.isDone());
+    EXPECT_EQ(splitter.next(), "asdf");
+    EXPECT_EQ(splitter.next(), "bfjgj");
+    EXPECT_EQ(splitter.next(), "");
+    EXPECT_EQ(splitter.next(), "jfjfjf");
+    EXPECT_TRUE(splitter.isDone());
+    EXPECT_EQ(splitter.next(), "");
+    EXPECT_EQ(splitter.next(), "");
 }
 
 } // namespace core_as::str::tests

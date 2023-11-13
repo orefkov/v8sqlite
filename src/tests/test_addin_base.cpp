@@ -216,15 +216,16 @@ TEST(AddinBase, GetClassNames) {
         {u"TestAddinProc3"_h, 0},
         {u"TestNoEndExtesion"_h, 0}};
 
-    auto names = stru{GetClassNames()}.split<std::vector<ssu>>(u"|");
+    auto names = stru{GetClassNames()}.splitter(u"|");
 
-    EXPECT_EQ(names.size(), addinNames.size());
+    EXPECT_FALSE(names.isDone());
 
-    for (const auto& name : names) {
-        auto fnd = addinNames.find(name);
+    while (!names.isDone()) {
+        auto fnd = addinNames.find(names.next());
         EXPECT_NE(fnd, addinNames.end());
         addinNames.erase(fnd);
     }
+    EXPECT_TRUE(addinNames.empty());
 }
 
 void testCreate(stru name) {

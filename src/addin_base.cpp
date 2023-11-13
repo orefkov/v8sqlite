@@ -1,4 +1,5 @@
-﻿#include "stdafx.h"
+﻿#include "core_as/str/sstring.h"
+#include "stdafx.h"
 #include "addin_base.h"
 
 namespace {
@@ -40,5 +41,15 @@ long DestroyObject(IComponentBase** pIntf) {
 }
 
 const WCHAR_T* GetClassNames() {
-    return AddinInfo::classes();
+    static auto classes = []() {
+        lstringu<100> classes;
+        for (AddinInfo* ptr = AddinInfo::first; ptr; ptr = ptr->next) {
+            classes += ptr->name;
+            if (ptr->next) {
+                classes += u"|";
+            }
+        }
+        return classes;
+    }();
+    return classes;
 }
