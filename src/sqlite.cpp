@@ -1,14 +1,19 @@
 ﻿#include "stdafx.h"
 #include "sqlite.h"
 
-extern "C" int sqlite3_unicode_init(sqlite3* db);
+extern "C" int sqlite3_unicode_load();
 
 bool SqliteBase::open(stru name) {
+    static struct SqliteUnicodeInit {
+        SqliteUnicodeInit() {
+            sqlite3_unicode_load();
+        }
+    } unicodeInit;
+
     if (db_) {
         close();
     }
     if (SQLITE_OK == sqlite3_open16(name, &db_)) {
-        sqlite3_unicode_init(db_);
         return opened_ = true;
     }
     return opened_ = false;

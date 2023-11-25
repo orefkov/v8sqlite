@@ -31,7 +31,7 @@ concept StrType = requires(const A& a) {
     { a.isEmpty() } -> std::same_as<bool>;
     { a.length()  } -> std::convertible_to<size_t>;
     { a.symbols() } -> std::same_as<const K*>;
-} && std::is_same_v<typename A::symb_type, K>;
+} && std::is_same_v<typename std::remove_cvref_t<A>::symb_type, K>;
 
 /*
 * Шаблонные классы для создания строковых выражений из нескольких источников

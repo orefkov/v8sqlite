@@ -238,6 +238,12 @@ public:
         sqlite3_reset(stmt_);
         receiver.setResult(result, sqlite3_db_handle(stmt_));
     }
+    template<QueryResultReceiver Q>
+    Q exec() {
+        Q receiver;
+        exec(receiver);
+        return receiver;
+    }
 protected:
     sqlite3_stmt* stmt_{nullptr};
 };

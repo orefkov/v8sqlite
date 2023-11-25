@@ -177,11 +177,13 @@ TEST(Sqlite, ExecPreparedBind) {
     EXPECT_EQ(base.exec(u"create table test(a, b, c)"), SQLITE_OK);
     auto query = base.prepare(u"insert into test values(?,?,?)");
     EXPECT_TRUE(query.valid());
-    SimpleResultReceiver srInsert;
-    query.bind(1, 1).bind(2, 2.0).bind(3, u"text").exec(srInsert);
+    
+    auto srInsert = query.bind(1, 1).bind(2, 2.0).bind(3, u"text").exec<SimpleResultReceiver>();
+    
     EXPECT_EQ(srInsert.error_, SQLITE_DONE);
     EXPECT_EQ(srInsert.changes_, 1ll);
     EXPECT_EQ(srInsert.lastId_, 1ll);
+    
     query.bind(1, db_null{}).bind(2, "ABC\0A").bind(3, u"3").exec(srInsert);
     EXPECT_EQ(srInsert.error_, SQLITE_DONE);
     EXPECT_EQ(srInsert.changes_, 1ll);
@@ -248,10 +250,10 @@ TEST(Sqlite, JsonBase64) {
     EXPECT_EQ(lstringu<20>{eeu & expr_str_base64("a")}, u"YQ==");
     EXPECT_EQ(lstringu<20>{eeu & expr_str_base64("ab")}, u"YWI=");
     EXPECT_EQ(lstringu<20>{eeu & expr_str_base64("abc")}, u"YWJj");
-    lstringu<20> t{eeu & expr_str_base64("ABC")};
+    lstringu<20> t{expr_str_base64("ABC")};
     EXPECT_EQ(t, u"QUJD");
     
-    EXPECT_EQ(lstringu<20>{eeu & expr_json_str(u"abc\n\"\r")}, u"abc\\n\\\"\\r");
+    EXPECT_EQ(lstringu<20>{expr_json_str(u"abc\n\"\r")}, u"abc\\n\\\"\\r");
 }
 
 TEST(Sqlite, Unicode) {
