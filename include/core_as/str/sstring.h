@@ -1909,7 +1909,7 @@ public:
 
 private:
     template<typename T>
-    Impl& changeImpl(size_t from, size_t len, T&& expr) {
+    Impl& changeImpl(size_t from, size_t len, T expr) {
         size_t myLen = _len();
         if (from > myLen) {
             from = myLen;
@@ -1949,7 +1949,7 @@ private:
     Impl& appendFromImpl(size_t pos, T expr) {
         if (pos > _len())
             pos = _len();
-        if (size_t len = expr.length(); len)
+        if (size_t len = expr.length())
             expr.place(d().setSize(pos + len) + pos);
         else
             d().setSize(pos);
@@ -1985,7 +1985,7 @@ public:
     }
 
     Impl& change(size_t from, size_t len, SimpleStr other) {
-        return changeImpl<SimpleStr>(from, len, std::move(other));
+        return changeImpl<SimpleStr>(from, len, other);
     }
 
     template<StrExprForType<K> A>
@@ -1994,7 +1994,7 @@ public:
     }
 
     Impl& insert(size_t to, SimpleStr other) {
-        return changeImpl<SimpleStr>(to, 0, std::move(other));
+        return changeImpl<SimpleStr>(to, 0, other);
     }
     template<StrExprForType<K> A>
     Impl& insert(size_t to, const A& expr) {
@@ -2006,7 +2006,7 @@ public:
     }
 
     Impl& prepend(SimpleStr other) {
-        return changeImpl<SimpleStr>(0, 0, std::move(other));
+        return changeImpl<SimpleStr>(0, 0, other);
     }
     template<StrExprForType<K> A>
     Impl& prepend(const A& expr) {
