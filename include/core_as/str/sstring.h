@@ -390,8 +390,8 @@ public:
             idxStart = idxEnd;
         return StrPiece{_str() + idxStart, idxEnd - idxStart};
     }
-    constexpr StrPiece mid(size_t from, ptrdiff_t len = -1) const noexcept {
-        size_t myLen = _len(), idxStart = from, idxEnd = len >= 0 ? from + len : myLen;
+    constexpr StrPiece mid(size_t from, size_t len = -1) const noexcept {
+        size_t myLen = _len(), idxStart = from, idxEnd = from > std::numeric_limits<size_t>::max() - len ? myLen : from + len;
         if (idxEnd > myLen)
             idxEnd = myLen;
         if (idxStart > idxEnd)
@@ -412,13 +412,31 @@ public:
         return _str()[idx >= 0 ? idx : _len() + idx];
     }
     // Сравнение строк
-    constexpr int compare(const K* text, size_t len) const { // Сравнение строк
+    constexpr int compare(const K* text, size_t len) const {
         size_t myLen = _len();
         int cmp = traits::compare(_str(), text, std::min(myLen, len));
         return cmp == 0 ? (myLen > len ? 1 : myLen == len ? 0 : -1) : cmp;
     }
     constexpr int compare(StrPiece o) const {
         return compare(o.symbols(), o.length());
+    }
+    // Сравнение c C-строками
+    constexpr int strcmp(const K* text) const {
+        size_t myLen = _len(), idx = 0;
+        const K* ptr = _str();
+        for (; idx < myLen; idx++) {
+            uns_type s1 = (uns_type)text[idx];
+            if (!s1) {
+                return 1;
+            }
+            uns_type s2 = (uns_type)ptr[idx];
+            if (s1 < s2) {
+                return 1;
+            } else if (s1 > s2) {
+                return -1;
+            }
+        }
+        return text[idx] == 0 ? 0 : -1;
     }
 
     constexpr bool isEqual(const K* text, size_t len) const noexcept {
@@ -563,10 +581,10 @@ public:
         return str_pos::badIdx;
     }
 
-    my_type substr(size_t from, int len = 0) const { // индексация в code units
+    my_type substr(ptrdiff_t from, ptrdiff_t len = 0) const { // индексация в code units
         return my_type{d()(from, len)};
     }
-    my_type strMid(size_t from, int len = -1) const { // индексация в code units
+    my_type strMid(size_t from, size_t len = -1) const { // индексация в code units
         return my_type{d().mid(from, len)};
     }
 
@@ -1007,16 +1025,22 @@ public:
     Splitter(SimpleStr<K> text, SimpleStr<K> delim) : text_(text), delim_(delim) {}
 
     bool isDone() const {
-        return text_.length() == 0;
+        return text_.length() == str_pos::badIdx;
     }
 
     SimpleStr<K> next() {
         if (!text_.length()) {
-            return text_;
+            auto ret = text_;
+            text_.str++;
+            text_.len--;
+            return ret;
+        } else if (text_.length() == str_pos::badIdx) {
+            return {nullptr, 0};
         }
         size_t pos = text_.find(delim_), next = 0;
         if (pos == str_pos::badIdx) {
-            next = pos = text_.length();
+            pos = text_.length();
+            next = pos + 1;
         } else {
             next = pos + delim_.length();
         }
@@ -1502,7 +1526,7 @@ public:
             return;
         }
         size_t srcLen = f.length();
-        size_t newSize = srcLen + static_cast<int>((repl.len - pattern.len) * findes.size());
+        size_t newSize = srcLen + static_cast<ptrdiff_t>((repl.len - pattern.len) * findes.size());
 
         if (!newSize) {
             new (this) my_type{};
@@ -2119,18 +2143,22 @@ public:
         // Тут грязный хак для u8s и wide_char. u8s версия snprintf сразу возвращает размер нужного буфера, если он мал
         // а swprintf - возвращает -1. Под windows оба варианта xxx_p - тоже возвращают -1.
         // Поэтому для них надо тупо увеличивать буфер наугад, пока не подойдет
-        if constexpr (sizeof(K) == 1 && !isWindowsOs) {
+        if
+        #ifdef __clang__
+            constexpr
+        #endif
+            (sizeof(K) == 1 && !isWindowsOs) {
             result = printf_selector<K>::snprintf(ptr + from, capacity + 1, format, std::forward<T>(args)...);
             if (result > (int)capacity) {
                 ptr = from == 0 ? d().reserve(result) : d().setSize(from + result);
                 result = printf_selector<K>::snprintf(ptr + from, result + 1, format, std::forward<T>(args)...);
             }
         } else {
-            for (size_t i = 0;; i++) {
+            for (;;) {
                 result = printf_selector<K>::snprintf(ptr + from, capacity + 1, format, std::forward<T>(args)...);
-                if (result < 0 && i < 4) {
+                if (result < 0) {
                     // Не хватило буфера или ошибка конвертации.
-                    // Попробуем увеличить буфер в два раза, но не более чем всего в 16 раз
+                    // Попробуем увеличить буфер в два раза
                     capacity *= 2;
                     ptr = from == 0 ? d().reserve(capacity) : d().setSize(from + capacity);
                 } else
@@ -2370,6 +2398,18 @@ protected:
         return fromRealAddress(core_as_malloc((newSize + 1) * sizeof(K) + extra));
     }
 
+    void swapBig(my_type&& other) {
+        size_t tsize = other.size;
+        size_t tbufSize = other.bufSize;
+        K* tdata = other.data;
+        other.size = size;
+        other.bufSize = bufSize;
+        other.data = data;
+        size = tsize;
+        bufSize = tbufSize;
+        data = tdata;
+    }
+
 public:
     using base_store::base_store;
     using base_utf::base_utf;
@@ -2384,7 +2424,7 @@ public:
     // Копирование из другой строки с таким же размером буфера
     lstring(const my_type& other) {
         if (other.size)
-            traits::copy(reserve(other.size), other.symbols(), other.size + 1);
+            traits::copy(init(other.size), other.symbols(), other.size + 1);
     }
 
     // Перемещение из другой строки с таким же размером буфера
@@ -2409,17 +2449,36 @@ public:
         this->operator<<(op);
     }
 
+    // copy and swap для присваиваний здесь не очень применимо, так как для строк с большим локальным буфером лишняя копия даже перемещением будет дорого стоить
+    // Поэтому реализуем копирующее и перемещающее присваивание отдельно
     my_type& operator=(const my_type& other) {
+        // Так как между этими объектами не может быть косвенной зависимости, достаточно проверить только на равенство
         if (&other != this) {
-            operator=(other.toStr());
+            if (other.size <= N) {
+                dealloc();
+                traits::copy(local, other.local, other.size);
+                size = other.size;
+                local[size] = 0;
+            } else {
+                swapBig(my_type{other});
+            }
         }
         return *this;
     }
 
     my_type& operator=(my_type&& other) noexcept {
+        // Так как между этими объектами не может быть косвенной зависимости, достаточно проверить только на равенство
         if (&other != this) {
-            this->~lstring(); // Освобождаем хранимое. Боятся потерять не надо, исключений не будет
-            new (this) my_type(std::move(other));
+            if (other.size <= N) {
+                dealloc();
+                traits::copy(local, other.local, other.size);
+                size = other.size;
+                local[size] = 0;
+                other.size = 0;
+                other.local[0] = 0;
+            } else {
+                swapBig(std::move(other));
+            }
         }
         return *this;
     }
@@ -2438,16 +2497,13 @@ public:
                     traits::move(myText, other.str, other.len);
                 }
                 setSize(other.len);
-            } else {
-                K* place = other.len <= N ? local : allocPlace(other.len);
+            } else if (other.len <= N) {
                 dealloc();
-                traits::copy(place, other.str, other.len);
-                if (other.len > N) {
-                    data = place;
-                    bufSize = other.len;
-                }
+                traits::copy(local, other.str, other.len);
                 size = other.len;
-                place[size] = 0;
+                local[size] = 0;
+            } else {
+                swapBig(my_type{other});
             }
         }
         return *this;
@@ -2464,17 +2520,18 @@ public:
     my_type& operator=(const A& expr) {
         size_t newLen = expr.length();
         if (!newLen) {
-            setSize(0);
-        } else {
-            K* place = newLen <= N ? local : allocPlace(newLen);
             dealloc();
-            *expr.place(place) = 0;
-            if (newLen > N) {
-                data = place;
-                bufSize = newLen;
-            }
-            size = newLen;
+        } else if (newLen <= N) {
+            dealloc();
+            *expr.place(local) = 0;
+        } else {
+            K* newData = allocPlace(newLen);
+            *expr.place(newData) = 0;
+            dealloc();
+            data = newData;
+            bufSize = newLen;
         }
+        size = newLen;
         return *this;
     }
 
@@ -2796,19 +2853,21 @@ public:
     // Инициализация из строкового литерала
     template<size_t N>
     sstring(const K (&s)[N]) {
-        if constexpr (N == 1) {
-            createEmpty();
-        } else {
-            type = Constant;
-            localRemain = 0;
-            cstr = s;
-            bigLen = N - 1;
-        }
+        type = Constant;
+        localRemain = 0;
+        cstr = s;
+        bigLen = N - 1;
+    }
+
+    void swap(my_type&& other) noexcept {
+        char buf[sizeof(my_type)];
+        memcpy(buf, this, sizeof(my_type));
+        memcpy(this, &other, sizeof(my_type));
+        memcpy(&other, buf, sizeof(my_type));
     }
 
     my_type& operator=(my_type other) noexcept {
-        this->~sstring();
-        new (this) my_type(std::move(other));
+        swap(std::move(other));
         return *this;
     }
 
@@ -2818,9 +2877,7 @@ public:
 
     template<size_t N>
     my_type& operator=(const K (&other)[N]) {
-        this->~sstring();
-        new (this) my_type(other);
-        return *this;
+        return operator=(my_type{other});
     }
 
     template<size_t N, bool S>
@@ -2833,8 +2890,9 @@ public:
         return operator=(my_type{std::move(other)});
     }
 
-    my_type& makeEmpty() {
-        this->~sstring();
+    my_type& makeEmpty() noexcept {
+        if (type == Shared)
+            SharedStringData<K>::from_str(sstr)->decr();
         createEmpty();
         return *this;
     }
@@ -3073,6 +3131,40 @@ template<typename K, size_t N, size_t L>
 inline constexpr auto e_repl(SimpleStr<K> w, const K (&p)[N], const K (&r)[L]) {
     return expr_replaces<K, N - 1, L - 1>{w, p, r};
 }
+
+template<typename K>
+struct expr_replaced {
+    using symb_type = K;
+    using my_type = expr_replaced<K>;
+    SimpleStr<K> what;
+    const SimpleStr<K> pattern;
+    const SimpleStr<K> repl;
+    mutable std::vector<size_t> positions;
+
+    constexpr expr_replaced(SimpleStr<K> w, SimpleStr<K> p, SimpleStr<K> r) : what(w), pattern(p), repl(r) {}
+
+    constexpr size_t length() const {
+        positions = what.findAll(pattern);
+        return what.length() + (int(repl.length()) - int(pattern.length())) * static_cast<size_t>(positions.size());
+    }
+    constexpr K* place(K* ptr) const noexcept {
+        size_t from = 0;
+        for (size_t k: positions) {
+            size_t copyLen = k - from;
+            if (copyLen) {
+                std::char_traits<K>::copy(ptr, what.symbols() + from, copyLen);
+                ptr += copyLen;
+            }
+            ptr = repl.place(ptr);
+            from = k + pattern.length();
+        }
+        if (size_t tailLen = what.length() - from; tailLen) {
+            std::char_traits<K>::copy(ptr, what.symbols() + from, tailLen);
+            ptr += tailLen;
+        }
+        return ptr;
+    }
+};
 
 template<StrExpr A, StrExprForType<typename A::symb_type> B>
 struct expr_choice {
@@ -3404,8 +3496,13 @@ public:
         other.write = nullptr;
     }
     my_type& operator=(my_type other) noexcept {
-        this->~my_type();
-        new (this) my_type(std::move(other));
+        chunks.swap(std::move(other.chunks));
+        write = other.write;
+        len = other.len;
+        remain = other.remain;
+        align = other.align;
+        other.len = other.remain = 0;
+        other.write = nullptr;
         return *this;
     }
 
@@ -3513,9 +3610,10 @@ public:
     }
 
     void clear() {
-        size_t a = align;
-        this->~chunked_string_builder<K>();
-        new (this) chunked_string_builder<K>(a);
+        chunks.clear();
+        write = nullptr;
+        len = 0;
+        remain = 0;
     }
     struct portionStore {
         typename decltype(chunks)::const_iterator it, end;
@@ -3645,6 +3743,15 @@ struct std::formatter<core_as::str::SimpleStr<K>, K> : std::formatter<std::basic
     // Define format() by calling the base class implementation with the wrapped value
     template<typename FormatContext>
     auto format(core_as::str::SimpleStr<K> t, FormatContext& fc) const {
+        return std::formatter<std::basic_string_view<K>, K>::format({t.str, t.len}, fc);
+    }
+};
+
+template<typename K>
+struct std::formatter<core_as::str::SimpleStrNt<K>, K> : std::formatter<std::basic_string_view<K>, K> {
+    // Define format() by calling the base class implementation with the wrapped value
+    template<typename FormatContext>
+    auto format(core_as::str::SimpleStrNt<K> t, FormatContext& fc) const {
         return std::formatter<std::basic_string_view<K>, K>::format({t.str, t.len}, fc);
     }
 };
