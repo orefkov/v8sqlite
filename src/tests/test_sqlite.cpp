@@ -1,5 +1,6 @@
 ﻿#include "../sqlite.h"
 #include<gtest/gtest.h>
+#include <utility>
 #include <vector>
 
 #ifdef _WIN32
@@ -20,6 +21,29 @@ TEST(Sqlite, CreateBase) {
     EXPECT_TRUE(base.isOpen());
     base.close();
     EXPECT_FALSE(base.isOpen());
+}
+
+TEST(Sqlite, Move) {
+    SqliteBase base;
+    EXPECT_FALSE(base.isOpen());
+    EXPECT_EQ(base.lastError(), u"");
+    EXPECT_EQ(base.changes(), 0ll);
+    EXPECT_EQ(base.lastId(), 0ll);
+
+    EXPECT_TRUE(base.open(u":memory:"));
+    EXPECT_TRUE(base.isOpen());
+
+    sqlite3* db = base;
+
+    SqliteBase other(std::move(base));
+    EXPECT_TRUE(other.isOpen());
+    EXPECT_FALSE(base.isOpen());
+    EXPECT_EQ(db, static_cast<sqlite3*>(other));
+
+    base = std::move(other);
+    EXPECT_TRUE(base.isOpen());
+    EXPECT_FALSE(other.isOpen());
+    EXPECT_EQ(db, static_cast<sqlite3*>(base));
 }
 
 TEST(Sqlite, ErrorCreateBase) {

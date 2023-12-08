@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "core_as/str/sstring.h"
 #include "sqlite3.h"
+#include <utility>
 using namespace core_as::str;
 
 class SqliteQuery;
@@ -21,13 +22,17 @@ concept QueryResultReceiver = requires(T& t) {
 class SqliteBase {
 public:
     SqliteBase() = default;
+    ~SqliteBase() {
+        close();
+    }
     SqliteBase(const SqliteBase&) = delete;
-    SqliteBase(SqliteBase&& other) noexcept : db_(other.db_) {
+    SqliteBase(SqliteBase&& other) noexcept : db_(other.db_), opened_(other.opened_) {
         other.db_ = nullptr;
+        other.opened_ = false;
     }
     SqliteBase& operator=(SqliteBase other) noexcept {
-        this->~SqliteBase();
-        new (this) SqliteBase(std::move(other));
+        std::swap(db_, other.db_);
+        std::swap(opened_, other.opened_);
         return *this;
     }
 
@@ -45,16 +50,16 @@ public:
         return stru{ db_ ? (const u16s*)sqlite3_errmsg16(db_) : nullptr};
     }
     int64_t lastId() const {
-        return db_ ? sqlite3_last_insert_rowid(db_) : 0;
+        return opened_ ? sqlite3_last_insert_rowid(db_) : 0;
     }
     int64_t changes() const {
-        return db_ ? sqlite3_changes64(db_) : 0;
+        return opened_ ? sqlite3_changes64(db_) : 0;
     }
     SqliteQuery prepare(stru query);
 
 protected:
-    sqlite3* db_{nullptr};
-    bool opened_{false};
+    sqlite3* db_{};
+    bool opened_{};
 };
 
 template<typename T>
@@ -238,14 +243,15 @@ public:
         sqlite3_reset(stmt_);
         receiver.setResult(result, sqlite3_db_handle(stmt_));
     }
-    template<QueryResultReceiver Q>
-    Q exec() {
-        Q receiver;
+    template<QueryResultReceiver Q, typename ...Args>
+    Q exec(Args&&... args) {
+        Q receiver(std::forward<Args>(args)...);
         exec(receiver);
         return receiver;
     }
+    
 protected:
-    sqlite3_stmt* stmt_{nullptr};
+    sqlite3_stmt* stmt_{};
 };
 
 double calcJulianDate(tm& dt);

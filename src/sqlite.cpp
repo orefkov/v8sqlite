@@ -28,12 +28,12 @@ void SqliteBase::close() {
 }
 
 int SqliteBase::exec(stru query) {
-    return db_ ? sqlite3_exec(db_, lstringa<4096>{query}, nullptr, nullptr, nullptr) : SQLITE_ERROR;
+    return opened_ ? sqlite3_exec(db_, lstringa<4096>{query}, nullptr, nullptr, nullptr) : SQLITE_ERROR;
 }
 
 SqliteQuery SqliteBase::prepare(stru query) {
     sqlite3_stmt* stmt = nullptr;
-    if (db_) {
+    if (opened_) {
         sqlite3_prepare16_v3(db_, (void*)query.str, (int)query.length() * 2, 0, &stmt, nullptr);
     }
     return SqliteQuery(stmt);
