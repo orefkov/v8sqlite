@@ -13,10 +13,7 @@ bool SqliteBase::open(stru name) {
     if (db_) {
         close();
     }
-    if (SQLITE_OK == sqlite3_open16(name, &db_)) {
-        return opened_ = true;
-    }
-    return opened_ = false;
+    return opened_ = SQLITE_OK == sqlite3_open16(name, &db_);
 }
 
 void SqliteBase::close() {

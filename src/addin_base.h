@@ -4,6 +4,7 @@
 #include "IMemoryManager.h"
 #include "core_as/str/sstring.h"
 #include "core_as/testable_static_assert.h"
+#include <utility>
 using namespace core_as::str;
 
 inline static stru varToTextU(const tVariant& v) {
@@ -85,12 +86,12 @@ protected:
     stru selectLocaleStr(stru rus, stru eng) {
         return uiLanguageCode_.starts_with_ia(u"ru") || locale_.starts_with_ia(u"ru") ? rus : eng;
     }
-    IAddInDefBaseEx* v8connection_{nullptr};
-    IMemoryManager* memoryManager_{nullptr};
+    IAddInDefBaseEx* v8connection_{};
+    IMemoryManager* memoryManager_{};
     stringu locale_;
     stringu uiLanguageCode_;
     stringu lastError_;
-    bool throwErrors_{false};
+    bool throwErrors_{};
 };
 
 struct AddinInfo {
@@ -660,7 +661,7 @@ public:
         return error(selectLocaleStr(rus, eng));
     }
     bool error(auto&& err) {
-        lastError_ = err;
+        lastError_ = std::move(err);
         if (throwErrors_) {
             v8connection_->AddError(ADDIN_E_FAIL, ImplType::ExtensionName.symbols(), lastError_, 0);
         }

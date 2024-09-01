@@ -226,8 +226,7 @@ struct ValueTableReceiver : ToTextReceiver {
         if constexpr (sizeof(wchar_t) == 2) {
             vtText << u"{\"N\","_ss + v + u"},";
         } else {
-            lstringa<40> va = eea + v;
-            vtText << u"{\"N\"," + lstringu<40>{va} + u"},";
+            vtText << u"{\"N\"," + lstringu<40>{lstringa<40>{eea + v}} + u"},";
         }
         currentCol++;
     }
@@ -303,8 +302,7 @@ struct JsonReceiver : ToTextReceiver {
         if constexpr (sizeof(wchar_t) == 2) {
             vtText << uR"({"#type":"jxs:decimal","#value":)"_ss + v + u"}";
         } else {
-            lstringa<40> va = eea + v;
-            vtText << uR"({"#type":"jxs:decimal","#value":)" + lstringu<40>{va} + u"}";
+            vtText << uR"({"#type":"jxs:decimal","#value":)" + lstringu<40>{lstringa<40>{eea + v}} + u"}";
         }
         addDelim();
     }

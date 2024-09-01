@@ -2248,7 +2248,7 @@ public:
             auto result = std::vformat_to(
                 writer{d(), ptr + from, ptr + capacity},
                 std::basic_string_view<K>{pattern.symbols(), pattern.length()},
-                std::make_format_args(std::forward<T>(args)...));
+                std::make_format_args(args...));
             d().set_size(result.ptr - _str());
         } else {
             auto result = std::vformat_to(

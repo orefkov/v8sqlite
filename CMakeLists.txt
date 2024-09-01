@@ -20,7 +20,7 @@ if (WIN32)
     # Одинаковые флаги для компиляторов MSVC и clang-cl во всех конфигурациях
     set (V8SQLITE_CXX_FLAGS "/std:c++20 /EHs /utf-8 /Zc:strictStrings /W3" CACHE STRING "")
     # Одинаковые флаги для компиляторов MSVC и clang-cl в релизной конфигурации
-    set (V8SQLITE_CXX_FLAGS_RELEASE "/O2 /GS- /DNDEBUG" CACHE STRING "")
+    set (V8SQLITE_CXX_FLAGS_RELEASE "/O3 /GS- /DNDEBUG" CACHE STRING "")
     # Одинаковые флаги для компиляторов MSVC и clang-cl в отладочной конфигурации
     set (V8SQLITE_CXX_FLAGS_DEBUG "/Zi /Ob0 /Od /D_DEBUG /RTC1" CACHE STRING "")
     # Флаги только для компилятора MSVC в релизной конфигурации
@@ -28,9 +28,9 @@ if (WIN32)
     # Флаги только для компилятора MSVC в отладочной конфигурации
     set (V8SQLITE_CXX_MSVC_DEBUG "" CACHE STRING "")
     # Флаги только для компилятора clang-cl в релизной конфигурации
-    set (V8SQLITE_CXX_CLANG_RELEASE "-flto" CACHE STRING "")
+    set (V8SQLITE_CXX_CLANG_RELEASE "-Wno-error=unused-command-line-argument -flto" CACHE STRING "")
     # Флаги только для компилятора clang-cl в отладочной конфигурации
-    set (V8SQLITE_CXX_CLANG_DEBUG "" CACHE STRING "")
+    set (V8SQLITE_CXX_CLANG_DEBUG "-Wno-error=unused-command-line-argument" CACHE STRING "")
 
     # Флаги для MSVC линкера в релизе
     set (V8SQLITE_LINK_MSVC_RELEASE "/DEBUG:NONE /LTGC" CACHE STRING "")

@@ -2,6 +2,7 @@
 #include<gtest/gtest.h>
 #include <utility>
 #include <vector>
+#include <cmath>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -271,9 +272,9 @@ TEST(Sqlite, JulianDay) {
 }
 
 TEST(Sqlite, JsonBase64) {
-    EXPECT_EQ(lstringu<20>{eeu & expr_str_base64("a")}, u"YQ==");
-    EXPECT_EQ(lstringu<20>{eeu & expr_str_base64("ab")}, u"YWI=");
-    EXPECT_EQ(lstringu<20>{eeu & expr_str_base64("abc")}, u"YWJj");
+    EXPECT_EQ(lstringu<20>{expr_str_base64("a")}, u"YQ==");
+    EXPECT_EQ(lstringu<20>{expr_str_base64("ab")}, u"YWI=");
+    EXPECT_EQ(lstringu<20>{expr_str_base64("abc")}, u"YWJj");
     lstringu<20> t{expr_str_base64("ABC")};
     EXPECT_EQ(t, u"QUJD");
     
