@@ -3,6 +3,8 @@
 #
 cmake_minimum_required (VERSION 3.15)
 
+remove_definitions(-DCORE_AS_SHARED)
+
 add_executable(testStr test_str.cpp)
 add_dependencies(testStr core_as_str)
 target_link_libraries(testStr core_as_str gtest_main)

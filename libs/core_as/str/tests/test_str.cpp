@@ -1,15 +1,15 @@
 ﻿#include <core_as/str/sstring.h>
 #include <gtest/gtest.h>
 
-COREAS_API void* core_as_malloc(size_t count) {
+void* core_as_malloc(size_t count) {
     return malloc(count);
 }
 
-COREAS_API void* core_as_realloc(void* ptr, size_t count) {
+void* core_as_realloc(void* ptr, size_t count) {
     return realloc(ptr, count);
 }
 
-COREAS_API void core_as_free(void* ptr) {
+void core_as_free(void* ptr) {
     free(ptr);
 }
 
@@ -19,31 +19,31 @@ class Tstringa: public stringa {
 public:
     using stringa::stringa;
 
-    bool isLocalString() const { return type == Local; }
-    bool isConstantString() const { return type == Constant; }
-    bool isSharedString() const { return type == Shared; }
+    bool isLocalString() const { return type_ == Local; }
+    bool isConstantString() const { return type_ == Constant; }
+    bool isSharedString() const { return type_ == Shared; }
 
     size_t sharedCount() const {
-        return type == Shared ? SharedStringData<u8s>::from_str(sstr)->ref.load() : 0u;
+        return type_ == Shared ? SharedStringData<u8s>::from_str(sstr_)->ref_.load() : 0u;
     }
 };
 
 
 TEST(CoreAsStr, CreateSimpleEmpty) {
     ssa testa{nullptr, 0};
-    EXPECT_TRUE(testa.isEmpty());
+    EXPECT_TRUE(testa.is_empty());
     EXPECT_EQ(testa.length(), 0u);
 
     ssw testw{nullptr, 0};
-    EXPECT_TRUE(testw.isEmpty());
+    EXPECT_TRUE(testw.is_empty());
     EXPECT_EQ(testw.length(), 0u);
 
     ssu testu{nullptr, 0};
-    EXPECT_TRUE(testu.isEmpty());
+    EXPECT_TRUE(testu.is_empty());
     EXPECT_EQ(testu.length(), 0u);
 
     ssuu testuu{nullptr, 0};
-    EXPECT_TRUE(testuu.isEmpty());
+    EXPECT_TRUE(testuu.is_empty());
     EXPECT_EQ(testuu.length(), 0u);
 }
 
@@ -89,15 +89,15 @@ TEST(CoreAsStr, CreateSimple) {
 
     ssa testa{"test"};
     EXPECT_EQ(testa, "test");
-    EXPECT_FALSE(testa.isEmpty());
+    EXPECT_FALSE(testa.is_empty());
 
     ssu testu{u"test"};
     EXPECT_EQ(testu, u"test");
-    EXPECT_FALSE(testu.isEmpty());
+    EXPECT_FALSE(testu.is_empty());
 
     ssw testw{L"test"};
     EXPECT_EQ(testw, L"test");
-    EXPECT_FALSE(testw.isEmpty());
+    EXPECT_FALSE(testw.is_empty());
 }
 
 TEST(CoreAsStr, At) {
@@ -223,7 +223,7 @@ TEST(CoreAsStr, CompareSimpleAllIU) {
 
 TEST(CoreAsStr, SimpleFind) {
     ssa testa = "Find a needle in a haystack";
-    EXPECT_EQ(testa.find("diamond"), str_pos::badIdx);
+    EXPECT_EQ(testa.find("diamond"), npos);
     EXPECT_EQ(testa.find("needle"), 7u);
     EXPECT_EQ(testa.find("a"), 5u);
     EXPECT_EQ(testa.find("a", 8), 17u);
@@ -245,7 +245,7 @@ TEST(CoreAsStr, SimpleFind) {
     EXPECT_EQ(res[0], 1u);
 
     ssu testu = u"Find a needle in a haystack";
-    EXPECT_EQ(testu.find(u"diamond"), str_pos::badIdx);
+    EXPECT_EQ(testu.find(u"diamond"), npos);
     EXPECT_EQ(testu.find(u"needle"), 7u);
     EXPECT_EQ(testu.find(u"a"), 5u);
     EXPECT_EQ(testu.find(u"a", 8), 17u);
@@ -259,7 +259,7 @@ TEST(CoreAsStr, SimpleFind) {
     EXPECT_EQ(res[1], 14u);
 
     ssw testw = L"Find a needle in a haystack";
-    EXPECT_EQ(testw.find(L"diamond"), str_pos::badIdx);
+    EXPECT_EQ(testw.find(L"diamond"), npos);
     EXPECT_EQ(testw.find(L"needle"), 7u);
     EXPECT_EQ(testw.find(L"a"), 5u);
     EXPECT_EQ(testw.find(L"a", 8), 17u);
@@ -594,32 +594,32 @@ TEST(CoreAsStr, CreateSstringEmpty) {
     stringa testa;
     EXPECT_EQ(testa.length(), 0u);
     EXPECT_EQ(testa, "");
-    EXPECT_TRUE(testa.isEmpty());
+    EXPECT_TRUE(testa.is_empty());
 
     stringu testu;
     EXPECT_EQ(testu.length(), 0u);
     EXPECT_EQ(testu, u"");
-    EXPECT_TRUE(testu.isEmpty());
+    EXPECT_TRUE(testu.is_empty());
 
     stringw testw;
     EXPECT_EQ(testw.length(), 0u);
     EXPECT_EQ(testw, L"");
-    EXPECT_TRUE(testw.isEmpty());
+    EXPECT_TRUE(testw.is_empty());
 }
 
 TEST(CoreAsStr, CreateSstringFromLiteral) {
 
     stringa testa{"test"};
     EXPECT_EQ(testa, "test");
-    EXPECT_FALSE(testa.isEmpty());
+    EXPECT_FALSE(testa.is_empty());
 
     stringu testu{u"test"};
     EXPECT_EQ(testu, u"test");
-    EXPECT_FALSE(testu.isEmpty());
+    EXPECT_FALSE(testu.is_empty());
 
     stringw testw{L"test"};
     EXPECT_EQ(testw, L"test");
-    EXPECT_FALSE(testw.isEmpty());
+    EXPECT_FALSE(testw.is_empty());
 }
 
 TEST(CoreAsStr, CreateSstringCopy) {
@@ -628,22 +628,22 @@ TEST(CoreAsStr, CreateSstringCopy) {
     stringa copya{testa};
     EXPECT_EQ(copya, testa);
     EXPECT_EQ(copya, "test");
-    EXPECT_FALSE(testa.isEmpty());
-    EXPECT_FALSE(copya.isEmpty());
+    EXPECT_FALSE(testa.is_empty());
+    EXPECT_FALSE(copya.is_empty());
 
     stringu testu{u"test"};
     stringu copyw{testu};
     EXPECT_EQ(copyw, testu);
     EXPECT_EQ(copyw, u"test");
-    EXPECT_FALSE(testu.isEmpty());
-    EXPECT_FALSE(copyw.isEmpty());
+    EXPECT_FALSE(testu.is_empty());
+    EXPECT_FALSE(copyw.is_empty());
 
     stringw testw{L"test"};
     stringw copyu{testw};
     EXPECT_EQ(copyu, testw);
     EXPECT_EQ(copyu, L"test");
-    EXPECT_FALSE(testw.isEmpty());
-    EXPECT_FALSE(copyu.isEmpty());
+    EXPECT_FALSE(testw.is_empty());
+    EXPECT_FALSE(copyu.is_empty());
 }
 
 TEST(CoreAsStr, CreateSstringCopy1) {
@@ -652,7 +652,7 @@ TEST(CoreAsStr, CreateSstringCopy1) {
         EXPECT_TRUE(sample.isConstantString());
         Tstringa copy1{sample};
         EXPECT_TRUE(copy1.isConstantString());
-        EXPECT_TRUE(sample.toStr().isSame(copy1.toStr()));
+        EXPECT_TRUE(sample.toStr().is_same(copy1.toStr()));
         EXPECT_EQ(sample.sharedCount(), 0u);
         EXPECT_EQ(copy1.sharedCount(), 0u);
     }
@@ -662,7 +662,7 @@ TEST(CoreAsStr, CreateSstringCopy1) {
         EXPECT_TRUE(sample.isLocalString());
         Tstringa copy1{sample};
         EXPECT_TRUE(copy1.isLocalString());
-        EXPECT_FALSE(sample.toStr().isSame(copy1.toStr()));
+        EXPECT_FALSE(sample.toStr().is_same(copy1.toStr()));
         EXPECT_EQ(sample.sharedCount(), 0u);
         EXPECT_EQ(copy1.sharedCount(), 0u);
     }
@@ -674,25 +674,25 @@ TEST(CoreAsStr, CreateSstringCopy1) {
         EXPECT_EQ(sample.sharedCount(), 1u);
         Tstringa copy1{sample};
         EXPECT_TRUE(copy1.isSharedString());
-        EXPECT_TRUE(sample.toStr().isSame(copy1.toStr()));
+        EXPECT_TRUE(sample.toStr().is_same(copy1.toStr()));
         EXPECT_EQ(sample.sharedCount(), 2u);
         EXPECT_EQ(copy1.sharedCount(), 2u);
     }
 
     {
         lstringsa<10> sample{10, "sample"};
-        EXPECT_FALSE(sample.isEmpty());
+        EXPECT_FALSE(sample.is_empty());
         Tstringa copy1{sample};
-        EXPECT_FALSE(sample.isEmpty());
+        EXPECT_FALSE(sample.is_empty());
         EXPECT_TRUE(copy1.isSharedString());
         EXPECT_EQ(copy1.sharedCount(), 1u);
     }
 
     {
         lstringsa<10> sample{10, "sample"};
-        EXPECT_FALSE(sample.isEmpty());
+        EXPECT_FALSE(sample.is_empty());
         Tstringa copy1{std::move(sample)};
-        EXPECT_TRUE(sample.isEmpty());
+        EXPECT_TRUE(sample.is_empty());
         EXPECT_TRUE(copy1.isSharedString());
         EXPECT_EQ(copy1.sharedCount(), 1u);
     }
@@ -704,22 +704,22 @@ TEST(CoreAsStr, CreateSstringMove) {
     stringa copya{std::move(testa)};
     EXPECT_NE(copya, testa);
     EXPECT_EQ(copya, "test");
-    EXPECT_TRUE(testa.isEmpty());
-    EXPECT_FALSE(copya.isEmpty());
+    EXPECT_TRUE(testa.is_empty());
+    EXPECT_FALSE(copya.is_empty());
 
     stringu testu{u"test"};
     stringu copyw{std::move(testu)};
     EXPECT_NE(copyw, testu);
     EXPECT_EQ(copyw, u"test");
-    EXPECT_TRUE(testu.isEmpty());
-    EXPECT_FALSE(copyw.isEmpty());
+    EXPECT_TRUE(testu.is_empty());
+    EXPECT_FALSE(copyw.is_empty());
 
     stringw testw{L"test"};
     stringw copyu{std::move(testw)};
     EXPECT_NE(copyu, testw);
     EXPECT_EQ(copyu, L"test");
-    EXPECT_TRUE(testw.isEmpty());
-    EXPECT_FALSE(copyu.isEmpty());
+    EXPECT_TRUE(testw.is_empty());
+    EXPECT_FALSE(copyu.is_empty());
 }
 
 TEST(CoreAsStr, CreateSstringChars) {
@@ -771,9 +771,9 @@ TEST(CoreAsStr, CreateSstringLong) {
 }
 
 TEST(CoreAsStr, CreateSstringStrExpr) {
-    EXPECT_EQ(stringa{eea & "test" & 10 & e_c('a', 3)}, "test10aaa");
-    EXPECT_EQ(stringu{eeu & u"test" & 10 & e_c(u'a', 3)}, u"test10aaa");
-    EXPECT_EQ(stringw{eew & L"test" & 10 & e_c(L'a', 3)}, L"test10aaa");
+    EXPECT_EQ(stringa{eea + "test" + 101 + e_c(3, 'a')}, "test101aaa");
+    EXPECT_EQ(stringu{eeu + u"test" + 1234 + e_c(3, u'a')}, u"test1234aaa");
+    EXPECT_EQ(stringw{eew + L"test" + 12345 + e_c(3, L'a')}, L"test12345aaa");
 }
 
 TEST(CoreAsStr, CreateSstringReplace) {
@@ -795,8 +795,8 @@ TEST(CoreAsStr, AssignSstring) {
     EXPECT_EQ(test = test, "test");
     EXPECT_EQ(test = "next", "next");
     EXPECT_EQ(test = ssa{"other"}, "other");
-    EXPECT_EQ(test = stringa{eea & "trtr" & 10}, "trtr10");
-    EXPECT_EQ(test = eea & "trtr" & 20, "trtr20");
+    EXPECT_EQ(test = stringa{eea + "trtr" + 10}, "trtr10");
+    EXPECT_EQ(test = eea + "trtr" + 20, "trtr20");
     EXPECT_EQ(test = test(2), "tr20");
     EXPECT_EQ(test = lstringa<10>{"func"}, "func");
     EXPECT_EQ(test = lstringsa<10>{"func"}, "func");
@@ -804,14 +804,14 @@ TEST(CoreAsStr, AssignSstring) {
     Tstringa t = sample;
     EXPECT_TRUE(t.isSharedString());
     EXPECT_EQ(t.sharedCount(), 1u);
-    EXPECT_FALSE(sample.isEmpty());
+    EXPECT_FALSE(sample.is_empty());
     EXPECT_EQ(sample.length(), 60u);
     EXPECT_EQ(sample, t.toStr());
 
     t = std::move(sample);
     EXPECT_TRUE(t.isSharedString());
     EXPECT_EQ(t.sharedCount(), 1u);
-    EXPECT_TRUE(sample.isEmpty());
+    EXPECT_TRUE(sample.is_empty());
     EXPECT_EQ(sample.symbols()[0], 0);
     EXPECT_EQ(t.length(), 60u);
 }
@@ -826,21 +826,21 @@ TEST(CoreAsStr, StrJoin) {
 
 TEST(CoreAsStr, LStringCreate) {
     lstringa<40> test;
-    EXPECT_TRUE(test.isEmpty());
+    EXPECT_TRUE(test.is_empty());
     EXPECT_EQ(test, "");
     EXPECT_EQ(test.length(), 0u);
 }
 
 TEST(CoreAsStr, LStringCreateLiteral) {
     lstringa<40> test{"test"};
-    EXPECT_FALSE(test.isEmpty());
+    EXPECT_FALSE(test.is_empty());
     EXPECT_EQ(test, "test");
     EXPECT_EQ(test.length(), 4u);
 }
 
 TEST(CoreAsStr, LStringCreateSimpleStr) {
     lstringa<40> test{ssa{"test"}};
-    EXPECT_FALSE(test.isEmpty());
+    EXPECT_FALSE(test.is_empty());
     EXPECT_EQ(test, "test");
     EXPECT_EQ(test.length(), 4u);
 }
@@ -857,8 +857,8 @@ TEST(CoreAsStr, LStringCreateMove) {
     lstringa<40> copy{std::move(test)};
     EXPECT_NE(test, copy);
     EXPECT_EQ(copy, "test");
-    EXPECT_TRUE(test.isEmpty());
-    EXPECT_FALSE(copy.isEmpty());
+    EXPECT_TRUE(test.is_empty());
+    EXPECT_FALSE(copy.is_empty());
     EXPECT_EQ(test.symbols()[0], 0);
 }
 
@@ -875,15 +875,15 @@ TEST(CoreAsStr, LStringCreatePad) {
 }
 
 TEST(CoreAsStr, LStringCreateExpr) {
-    lstringa<40> test{"test" & e_num<u8s>(10) & "-" & 20 & e_spca<3>()};
-    EXPECT_FALSE(test.isEmpty());
+    lstringa<40> test{"test" + e_num<u8s>(10) + "-" + 20 + e_spca<3>()};
+    EXPECT_FALSE(test.is_empty());
     EXPECT_EQ(test, "test10-20   ");
 }
 
 TEST(CoreAsStr, LStringCreateFunc) {
     EXPECT_EQ(lstringa<20>{[](auto& t) { t = "test";}}, "test");
     EXPECT_EQ(lstringa<20>{[](auto p, size_t l) {
-        EXPECT_EQ(l, 20u);
+        EXPECT_EQ(l, lstringa<20>::LocalCapacity);
         memcpy(p, "test", std::size("test") - 1);
         return std::size("test") - 1;
     }}, "test");
@@ -892,15 +892,15 @@ TEST(CoreAsStr, LStringCreateFunc) {
 TEST(CoreAsStr, LStringCreateSstring) {
     {
         lstringa<40> test{stringa{"test"}};
-        EXPECT_FALSE(test.isEmpty());
+        EXPECT_FALSE(test.is_empty());
         EXPECT_EQ(test, "test");
         EXPECT_EQ(test.length(), 4u);
     }
     {
         stringa t{"test"};
         lstringa<40> test{t};
-        EXPECT_FALSE(test.isEmpty());
-        EXPECT_FALSE(t.isEmpty());
+        EXPECT_FALSE(test.is_empty());
+        EXPECT_FALSE(t.is_empty());
         EXPECT_EQ(test, "test");
         EXPECT_EQ(test.length(), 4u);
     }
@@ -932,19 +932,18 @@ TEST(CoreAsStr, LStringAssign) {
         test = test(1, 2);
         EXPECT_EQ(test, "ex");
 
-        test = e_c('a', 100);
+        test = e_c(100, 'a');
         EXPECT_EQ(test.length(), 100u);
 
         lstringa<40> src{"test"};
         test = std::move(src);
         EXPECT_EQ(test, "test");
-        EXPECT_TRUE(src.isEmpty());
+        EXPECT_TRUE(src.is_empty());
 
         test = e_spca<3>();
         EXPECT_EQ(test, "   ");
     }
 }
-
 
 TEST(CoreAsStr, UtfConvert) {
     EXPECT_EQ(stringa{ssu{u"testпройден"}}, "testпройден");
@@ -1031,32 +1030,32 @@ TEST(CoreAsStr, LStrTrim) {
 
 TEST(CoreAsStr, LStrAppend) {
     EXPECT_EQ(lstringa<20>{"test"}.append("ing"), "testing");
-    EXPECT_EQ(lstringa<20>{"test"}.append(eea & "ing" & 10), "testing10");
+    EXPECT_EQ(lstringa<20>{"test"}.append("ing"_ss + 10), "testing10");
     EXPECT_EQ(lstringa<20>{"test"}.appendIn(3, "ing"), "tesing");
-    EXPECT_EQ(lstringa<20>{"test"}.appendIn(3, eea & "ing" & 10), "tesing10");
+    EXPECT_EQ(lstringa<20>{"test"}.appendIn(3, eea + "ing" + 10), "tesing10");
     EXPECT_EQ(lstringa<20>{"test"} += "ing", "testing");
-    EXPECT_EQ(lstringa<20>{"test"} += eea & "ing" & 10, "testing10");
+    EXPECT_EQ(lstringa<20>{"test"} += eea + "ing" + 10, "testing10");
 }
 
 TEST(CoreAsStr, LStrChange) {
     EXPECT_EQ(lstringa<20>{"test"}.insert(1, "---"), "t---est");
-    EXPECT_EQ(lstringa<20>{"test"}.insert(1, eea & "---"), "t---est");
+    EXPECT_EQ(lstringa<20>{"test"}.insert(1, eea + "---"), "t---est");
     EXPECT_EQ(lstringa<20>{"test"}.insert(100, "---"), "test---");
     EXPECT_EQ(lstringa<20>{"test"}.prepend("---"), "---test");
-    EXPECT_EQ(lstringa<3>{"test"}.prepend(eea & "---"), "---test");
+    EXPECT_EQ(lstringa<3>{"test"}.prepend(eea + "---"), "---test");
     EXPECT_EQ(lstringa<4>{"test"}.change(1, 2, "---"), "t---t");
-    EXPECT_EQ(lstringa<20>{"test"}.change(1, 2, eea & "---"), "t---t");
+    EXPECT_EQ(lstringa<20>{"test"}.change(1, 2, eea + "---"), "t---t");
     EXPECT_EQ(lstringa<0>{"test"}.change(100, 20, "---"), "test---");
     EXPECT_EQ(lstringa<1>{"test"}.remove(1, 2), "tt");
     EXPECT_EQ(lstringa<20>{""}.change(1, 5, "---"), "---");
 
     EXPECT_EQ(lstringu<20>{u"test"}.insert(1, u"---"), u"t---est");
-    EXPECT_EQ(lstringu<20>{u"test"}.insert(1, eeu & u"---"), u"t---est");
+    EXPECT_EQ(lstringu<20>{u"test"}.insert(1, eeu + u"---"), u"t---est");
     EXPECT_EQ(lstringu<20>{u"test"}.insert(100, u"---"), u"test---");
     EXPECT_EQ(lstringu<20>{u"test"}.prepend(u"---"), u"---test");
-    EXPECT_EQ(lstringu<3>{u"test"}.prepend(eeu & u"---"), u"---test");
+    EXPECT_EQ(lstringu<3>{u"test"}.prepend(eeu + u"---"), u"---test");
     EXPECT_EQ(lstringu<4>{u"test"}.change(1, 2, u"---"), u"t---t");
-    EXPECT_EQ(lstringu<20>{u"test"}.change(1, 2, eeu & u"---"), u"t---t");
+    EXPECT_EQ(lstringu<20>{u"test"}.change(1, 2, eeu + u"---"), u"t---t");
     EXPECT_EQ(lstringu<0>{u"test"}.change(100, 20, u"---"), u"test---");
     EXPECT_EQ(lstringu<1>{u"test"}.remove(1, 2), u"tt");
     EXPECT_EQ(lstringu<20>{u""}.change(1, 5, u"---"), u"---");
@@ -1087,14 +1086,17 @@ TEST(CoreAsStr, LStrSelfReplace) {
     }
 
     {
-        lstringa<11> test = "test string";
+        lstringa<11> test = "test string1234";
         ssa before = test;
         test.replace("st", "---");
-        EXPECT_EQ(test, "te--- ---ring");
+        EXPECT_EQ(test, "te--- ---ring1234");
         // buffer changed from local to allocated
         EXPECT_NE(before.str, test.toStr().str);
         test.replace("---", "s");
-        EXPECT_EQ(test, "tes sring");
+        EXPECT_EQ(test, "tes sring1234");
+        // buffer not changed from allocated to local
+        EXPECT_NE(before.str, test.toStr().str);
+        test.shrink_to_fit();
         // buffer changed from allocated to local
         EXPECT_EQ(before.str, test.toStr().str);
     }
@@ -1122,7 +1124,7 @@ TEST(CoreAsStr, LStrSelfFuncFill) {
         return 10;
     };
     EXPECT_EQ(count, 2);
-    EXPECT_EQ(first, 5);
+    EXPECT_EQ(first, lstringa<5>::LocalCapacity);
     EXPECT_EQ(second, 10);
     EXPECT_EQ(test, "aaaaaaaaaa");
 
@@ -1234,19 +1236,19 @@ TEST(CoreAsStr, LStrFormatExpressions) {
 
     int k = 10;
     double d = 12.1;
-    lstringa<10> test = ">" & e_repl(buffer.toStr(), "<>", "-") & k & ", " & d;
+    lstringa<10> test = ">" + e_repl(buffer.toStr(), "<>", "-") + k + ", " + d;
     EXPECT_EQ(test, ">asd-fgh-jkl10, 12.1");
 
-    buffer.prepend(e_choice(test.length() > 2, eea & 99, eea & 12.1 & "asd"));
+    buffer.prepend(e_choice(test.length() > 2, eea + 99, eea + 12.1 + "asd"));
     EXPECT_EQ(buffer, "99asd<>fgh<>jkl");
 
-    buffer.change(2, 4, test(0, 3) & "__" & 1 & ',');
+    buffer.change(2, 4, test(0, 3) + "__" + 1 + ',');
     EXPECT_EQ(buffer, "99>as__1,>fgh<>jkl");
 }
 
 TEST(CoreAsStr, LStrVFormat){
-    ssa t1 = "text1", t2 = "text2";
-    auto res = lstringa<4>{}.vformat("{}{}{}", t1, t2, 4);
+    ssa t1 = "text1", t2 = "text2", format = "{}{}{}";
+    auto res = lstringa<4>{}.vformat(format, t1, t2, 4);
     EXPECT_EQ(res, "text1text24");
 }
 
@@ -1271,7 +1273,7 @@ TEST(CoreAsStr, HashMap) {
     EXPECT_EQ(fnv_hash_ia( "asdfGhjkl"), fnv_hash_ia(_S( "asDFghjkl")));
     EXPECT_EQ(fnv_hash_ia(u"asdfghJkl"), fnv_hash_ia(_S(u"asdFGHjkl")));
     EXPECT_EQ(fnv_hash_ia(L"Asdfghjkl"), fnv_hash_ia(_S(L"asdfghjKL")));
-    
+
     EXPECT_EQ(fnv_hash_ia( "asDfghjkl"), fnv_hash_ia_compile(_S( "aSDfghjkl")));
     EXPECT_EQ(fnv_hash_ia(u"asdFghjkl"), fnv_hash_ia_compile(_S(u"asdFGhjkl")));
     EXPECT_EQ(fnv_hash_ia(L"asDfghjkl"), fnv_hash_ia_compile(_S(u"asdFGhjkl")));
@@ -1299,7 +1301,7 @@ TEST(CoreAsStr, HashMap) {
             {"asd"_h, 1},
             {"fgh"_h, 2},
         };
-        
+
         EXPECT_EQ(test.find("aaa"), test.end());
         EXPECT_NE(test.find("asd"_h), test.end());
         EXPECT_EQ(test.find("asd")->second, 1);
@@ -1311,7 +1313,7 @@ TEST(CoreAsStr, HashMap) {
             {"fgh"_ia, 2},
             {"rusрус"_ia, 3},
         };
-        
+
         EXPECT_EQ(test.find("aaa"), test.end());
         EXPECT_EQ(test.find("RUSРУС"_ia), test.end());
         EXPECT_EQ(test.find("aSd")->second, 1);
@@ -1319,18 +1321,18 @@ TEST(CoreAsStr, HashMap) {
 
     {
         hashStrMapAIA<int> test = {
-    #ifdef _MSC_VER
+    //#ifndef _MSC_VER
             std::initializer_list<std::pair<const stringa, int>>{
-    #endif
+    //#endif
             {"asd", 1},
             {"fgh", 2},
             {"rusрус", 3},
 
-    #ifdef _MSC_VER
+    //#ifdef _MSC_VER
             }
-    #endif
+    //#endif
         };
-        
+
         EXPECT_EQ(test.find("aaa"), test.end());
         EXPECT_EQ(test.find("RUSРУС"), test.end());
         EXPECT_EQ(test.find("aSd"_ia)->second, 1);
@@ -1342,7 +1344,7 @@ TEST(CoreAsStr, HashMap) {
             {"fgh"_iu, 2},
             {"rusрус"_iu, 3},
         };
-        
+
         EXPECT_EQ(test.find("aaa"), test.end());
         EXPECT_NE(test.find("RUSРУС"), test.end());
         EXPECT_EQ(test.find("RUSРУС"_iu)->second, 3);
@@ -1359,6 +1361,18 @@ TEST(CoreAsStr, SplitterWork) {
     EXPECT_TRUE(splitter.isDone());
     EXPECT_EQ(splitter.next(), "");
     EXPECT_EQ(splitter.next(), "");
+
+    Splitter<u8s> splitter1{"", "-"};
+    EXPECT_FALSE(splitter1.isDone());
+    EXPECT_EQ(splitter1.next(), "");
+    EXPECT_TRUE(splitter1.isDone());
+
+    Splitter<u8s> splitter2{"asd-", "-"};
+    EXPECT_FALSE(splitter2.isDone());
+    EXPECT_EQ(splitter2.next(), "asd");
+    EXPECT_FALSE(splitter2.isDone());
+    EXPECT_EQ(splitter2.next(), "");
+    EXPECT_TRUE(splitter1.isDone());
 }
 
 } // namespace core_as::str::tests

@@ -3,8 +3,12 @@
 * База для строковых конкатенаций через выражения времени компиляции
 */
 #pragma once
+#include <cstdlib>
+#include <string>
 #include <string_view>
 #include <type_traits>
+#include <concepts>
+#include <utility>
 
 namespace core_as::str {
 
@@ -26,12 +30,91 @@ using u32s = char32_t;
 
 using uu8s = std::make_unsigned<u8s>::type;
 
+/*
+Базовая концепция строкового объекта.
+В библиотеке для разных целей могут использоваться различные типы объектов строк.
+Мы считаем строковым объектом любой объект, поддерживающий методы:
+isEmpty() - возвращает, пуста ли строка.
+length() - длину строки без нулевого терминатора.
+symbols() - указатель на строку символов.
+и содержит объявление типа symb_type, задающего тип символов строки
+*/
+
 template<typename A, typename K>
 concept StrType = requires(const A& a) {
-    { a.isEmpty() } -> std::same_as<bool>;
+    { a.is_empty() } -> std::same_as<bool>;
     { a.length()  } -> std::convertible_to<size_t>;
     { a.symbols() } -> std::same_as<const K*>;
 } && std::is_same_v<typename std::remove_cvref_t<A>::symb_type, K>;
+
+/*
+* Все типы владеющих строк могут инициализироваться с помощью "строковых выражений".
+* Строковое выражение - это объект произвольного типа, у которого имеются методы:
+* size_t length() const - выдает длину строки
+* K* place(K*) const - скопировать символы строки в предназначенный буфер и вернуть указатель за последним символом
+
+* Т.е. при инициализации строковый объект запрашивает размер у строкового выражения, выделяет необходимую память,
+* и передает память строковому выражению, которое помещает символы в выделенный буфер.
+* Все строковые объекты сами могут выступать источником строкового выражения.
+
+* В-основном строковые выражения используются для конкатенации или конвертации строк.
+* Для них определен оператор +, который создает строковое выражение, объединениющее два строковых выражения,
+* и последовательно вызывающее их методы length и place.
+* Также оператор + определён для строковых выражений и строковых литералов, строковых выражений и чисел
+* (числа конвертируются в десятичное представление), а также вы можете сами добавить желаемые типы.
+* Пример:
+    stringa text = header + " count=" + count + ", done";
+
+* Существует несколько типов строковых выражений "из коробки", для выполнения различных операций со строками
+
+    expr_spaces<ТипСимвола, КоличествоСимволов, Символ = ' '>{} - выдает строку длинной КоличествоСимволов,
+        заполненную заданным символом. Количество символов и символ - константы времени компиляции.
+        Для некоторых случаев есть сокращенная запись:
+            e_spca(КоличествоСимволов) - строка char пробелов
+            e_spcw(КоличествоСимволов) - строка w_char пробелов
+
+    expr_pad<ТипСимвола>{КоличествоСимволов, Символ = ' '} - выдает строку длинной КоличествоСимволов,
+        заполненную заданным символом. Количество символов и символ могут задаваться в рантайме.
+        Сокращенная запись:
+            e_c(КоличествоСимволов, Символ)
+
+    e_choice(bool Condition, StrExpr1, StrExpr2) - если Condition == true, результат будет равен StrExpr1, иначе StrExpr2
+
+    expr_num<ТипСимвола>(ЦелоеЧисло) - конвертирует число в десятичное представление. Редко используется, так как
+        для строковых выражений и чисел переопределен оператор "+", и число можно просто написать как text + number;
+
+    expr_real<ТипСимвола>(ВещественноеЧисло) - конвертирует число в десятичное представление. Редко используется, так как
+        для строковых выражений и чисел переопределен оператор "+", и число можно просто написать как text + number;
+
+    e_ls<bool ПослеПоследнего = false>(контейнер, "Разделитель") - конкатенирует все строки в контейнере, используя разделитель.
+        Если ПослеПоследнего == true, то разделитель добавляется и после последнего элемента контейнера, иначе только
+        между элементами.
+
+    e_repl(ИсходнаяСтрока, "Искать", "Заменять") - заменяет в исходной строке вхождения "Искать" на "Заменять".
+        Шаблоны поиска и замены - строковые литералы времени компиляции.
+
+    expr_replaced<ТипСимвола>{ИсходнаяСтрока, Искать, Заменять} - заменяет в исходной строке вхождения Искать на Заменять.
+        Шаблоны поиска и замены - могут быть любыми строковыми объектами в рантайме.
+}
+*/
+
+/*
+* Концепт строкового выражения.
+* Источником строковых выражений может быть любой объект, поддерживающий эти операции:
+* тип symb_type, length(), place()
+*/
+template<typename A>
+concept StrExpr = requires(A&& a) {
+    typename A::symb_type;
+    { a.length() } -> std::convertible_to<size_t>;
+    { a.place(std::declval<typename A::symb_type*>()) } -> std::same_as<typename A::symb_type*>;
+};
+
+/*
+* Концепт строкового выражения заданного типа символов
+*/
+template<typename A, typename K>
+concept StrExprForType = StrExpr<A> && std::is_same_v<K, typename A::symb_type>;
 
 /*
 * Шаблонные классы для создания строковых выражений из нескольких источников
@@ -39,21 +122,9 @@ concept StrType = requires(const A& a) {
 * получать результирующую строку - сначала вычисляется длина результирующей строки,
 * потом один раз выделяется память для результата, после символы помещаются в
 * выделенную память.
+* Для конкатенация двух объектов строковых выражений в один
 */
 
-/* Источником строковых выражений может быть любой объект, поддерживающий эти операции :
-* тип symb_type, length(), place()
-*/
-template<typename A>
-concept StrExpr = requires(A&& a) {
-    { a.length() } -> std::convertible_to<size_t>;
-    { a.place(std::declval<typename A::symb_type*>()) } -> std::same_as<typename A::symb_type*>;
-};
-
-template<typename A, typename K>
-concept StrExprForType = StrExpr<A> && std::is_same_v<K, typename A::symb_type>;
-
-// Для конкатенация двух объектов строковых выражений в один
 template<StrExpr A, StrExprForType<typename A::symb_type> B>
 struct strexprjoin {
     using symb_type = typename A::symb_type;
@@ -66,12 +137,12 @@ struct strexprjoin {
 };
 
 template<StrExpr A, StrExprForType<typename A::symb_type> B>
-inline auto operator & (const A& a, const B& b) {
+inline auto operator + (const A& a, const B& b) {
     return strexprjoin<A, B>{a, b};
 }
 
 // Для возможности конкатенации ссылок на строковое выражение и создаваемого временного объекта, путём его копии
-template<StrExpr A, StrExprForType<typename A::symb_type> B>
+template<StrExpr A, StrExprForType<typename A::symb_type> B, bool last = true>
 struct strexprjoin_c {
     using symb_type = typename A::symb_type;
     const A& a;
@@ -79,7 +150,13 @@ struct strexprjoin_c {
     template<typename...Args>
     constexpr strexprjoin_c(const A& a_, Args&&... args_) : a(a_), b(std::forward<Args>(args_)...) {}
     constexpr size_t length() const noexcept { return a.length() + b.length(); }
-    constexpr symb_type* place(symb_type* p) const noexcept { return b.place(a.place(p)); }
+    constexpr symb_type* place(symb_type* p) const noexcept {
+        if constexpr (last) {
+            return b.place(a.place(p));
+        } else {
+            return a.place(b.place(p));
+        }
+    }
     constexpr symb_type* len_and_place(symb_type* p) const noexcept { a.length(); b.length(); return place(p); }
 };
 
@@ -114,7 +191,7 @@ struct expr_char {
 };
 
 template<typename K, StrExprForType<K> A>
-constexpr inline auto operator & (const A& a, K s) {
+constexpr inline auto operator + (const A& a, K s) {
     return strexprjoin_c<A, expr_char<K>>{ a, s };
 }
 
@@ -161,12 +238,12 @@ struct expr_literal_join {
 };
 
 template<typename K, StrExprForType<K> A, size_t N>
-constexpr inline auto operator & (const A& a, const K(&s)[N]) {
+constexpr inline auto operator + (const A& a, const K(&s)[N]) {
     return expr_literal_join<false, K, (N - 1), A>{ s, a };
 }
 
 template<typename K, StrExprForType<K> A, size_t N>
-constexpr inline auto operator & (const K(&s)[N], const A& a) {
+constexpr inline auto operator + (const K(&s)[N], const A& a) {
     return expr_literal_join<true, K, (N - 1), A>{ s, a };
 }
 
@@ -194,8 +271,8 @@ constexpr inline auto e_spcw() {
 template<typename K>
 struct expr_pad {
     using symb_type = K;
-    K s;
     size_t len;
+    K s;
     constexpr size_t length() const noexcept { return len; }
     constexpr symb_type* place(symb_type* p) const noexcept {
         if (len)
@@ -205,8 +282,8 @@ struct expr_pad {
 };
 
 template<typename K>
-constexpr inline auto e_c(K s, size_t l) {
-    return expr_pad<K>{ s, l };
+constexpr inline auto e_c(size_t l, K s) {
+    return expr_pad<K>{ l, s };
 }
 
 }// namespace core_as::str

@@ -7,6 +7,7 @@ cmake_minimum_required (VERSION 3.15)
 add_library (core_as_str
     sstring.cpp
     simple_unicode.cpp
+    simdutf/simdutf.cpp
 )
 
 if (BUILD_TESTS)

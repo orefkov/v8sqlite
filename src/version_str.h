@@ -1,1 +1,1 @@
-#define COPY_RIGHT "© Александр Орефков, 2023"
+#define COPY_RIGHT "© Александр Орефков, 2024"

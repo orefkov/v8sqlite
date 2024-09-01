@@ -14,14 +14,14 @@ bool V8SqliteAddin::OpenDataBase(tVariant* params, unsigned count) {
     if (!db_.isOpen()) {
         return reportDbError();
     }
-    lastError_.makeEmpty();
+    lastError_.make_empty();
     return true;
 }
 
 bool V8SqliteAddin::CloseDataBase(tVariant* params, unsigned count) {
     prepared_.clear();
     db_.close();
-    lastError_.makeEmpty();
+    lastError_.make_empty();
     return true;
 }
 
@@ -32,7 +32,7 @@ bool V8SqliteAddin::Exec(tVariant* params, unsigned count) {
     if (params[0].vt != VTYPE_PWSTR) {
         return error(u"Ожидается строковый параметр", u"String parameter needed");
     }
-    lastError_.makeEmpty();
+    lastError_.make_empty();
     return db_.exec(varToTextU(params[0])) == SQLITE_OK || reportDbError();
 }
 
@@ -51,7 +51,7 @@ bool V8SqliteAddin::PrepareQuery(tVariant* params, unsigned count) {
         return reportDbError();
     }
     prepared_.emplace_or_assign(varToTextU(params[0]), std::move(query));
-    lastError_.makeEmpty();
+    lastError_.make_empty();
     return true;
 }
 
@@ -144,7 +144,7 @@ bool V8SqliteAddin::BindParam(tVariant* params, unsigned count) {
     if (!makeBind(query, params[2], paramNum)) {
         return error(u"Неизвестный тип параметра", u"Bad param type");
     }
-    lastError_.makeEmpty();
+    lastError_.make_empty();
     return true;
 }
 
@@ -184,33 +184,33 @@ struct ValueTableReceiver : ToTextReceiver {
 
     void setColumnCount(unsigned cc) {
         doSetColCount(cc);
-        vtText << (eeu & u"{\"#\",acf6192e-81ca-46ef-93a6-5a6968b78663,{9,{" & cc & u",");
+        vtText << u"{\"#\",acf6192e-81ca-46ef-93a6-5a6968b78663,{9,{"_ss + cc + u",";
     }
 
     void addColumnName(ssu name) {
         checkColumnForDates(name);
-        if (name.find('\"') != str_pos::badIdx) {
+        if (name.find('\"') != npos) {
             lstringu<200> idName{e_repl(name, u"\"", u"\"\"")};
-            vtText << (eeu & u"{" & currentCol & u",\"" & idName & u"\",{\"Pattern\"},\"" & idName & u"\",0},");
+            vtText << u"{"_ss + currentCol + u",\"" + idName + u"\",{\"Pattern\"},\"" + idName + u"\",0},";
         } else {
-            vtText << (eeu & u"{" & currentCol & u",\"" & name & u"\",{\"Pattern\"},\"" & name & u"\",0},");
+            vtText << u"{"_ss + currentCol + u",\"" + name + u"\",{\"Pattern\"},\"" + name + u"\",0},";
         }
         currentCol++;
     }
     enum {SpaceForRowCount = 20};
     void addRow() {
         if (rowCount == 0) {
-            vtText << (eeu & u"},{2," & colCount & u",");
+            vtText << u"},{2,"_ss + colCount + u",";
             for (unsigned i = 0; i < colCount; i++) {
-                vtText << (eeu & i & u"," & i & u",");
+                vtText << eeu + i + u"," + i + u",";
             }
             vtText << u"{1,";
             startOfRowCount = (int)vtText.length();
-            vtText << (expr_spaces<u16s, SpaceForRowCount>{} & u",");
+            vtText << expr_spaces<u16s, SpaceForRowCount>{} + u",";
         } else {
             vtText << u"0},";
         }
-        vtText << (eeu & u"{2," & rowCount & u"," & currentCol & u",");
+        vtText << u"{2,"_ss + rowCount + u"," + currentCol + u",";
         currentCol = 0;
         rowCount++;
     }
@@ -219,37 +219,37 @@ struct ValueTableReceiver : ToTextReceiver {
         currentCol++;
     }
     void addInteger(int64_t v) {
-        vtText << (eeu & u"{\"N\"," & v & u"},");
+        vtText << u"{\"N\","_ss + v + u"},";
         currentCol++;
     }
     void addReal(double v) {
         if constexpr (sizeof(wchar_t) == 2) {
-            vtText << (eeu & u"{\"N\"," & v & u"},");
+            vtText << u"{\"N\","_ss + v + u"},";
         } else {
-            lstringa<40> va = eea & v;
-            vtText << (u"{\"N\"," & lstringu<40>{va} & u"},");
+            lstringa<40> va = eea + v;
+            vtText << u"{\"N\"," + lstringu<40>{va} + u"},";
         }
         currentCol++;
     }
     void addText(ssu v) {
         if (dates[currentCol] && v.len == 19) {
-            vtText << (u"{\"D\"," & v(0, 4) & v(5, 2) & v(8, 2) & v(11, 2) & v(14, 2) & v(17, 2) & u"},");
+            vtText << u"{\"D\"," + v(0, 4) + v(5, 2) + v(8, 2) + v(11, 2) + v(14, 2) + v(17, 2) + u"},";
         } else {
-            vtText << (u"{\"S\",\"" & e_repl(v, u"\"", u"\"\"") & u"\"},");
+            vtText << u"{\"S\",\"" + e_repl(v, u"\"", u"\"\"") + u"\"},";
         }
         currentCol++;
     }
     void addBlob(ssa v) {
-        vtText << (u"{\"#\",87126200-3e98-44e0-b931-ccb1d7edc497,{1,{#base64:" & expr_str_base64(v) & u"}}},");
+        vtText << u"{\"#\",87126200-3e98-44e0-b931-ccb1d7edc497,{1,{#base64:" + expr_str_base64(v) + u"}}},";
         currentCol++;
     }
     void setResult(int e, sqlite3* db) {
         error = e;
         if (SQLITE_DONE == e && colCount) {
             if (!rowCount) {
-                vtText << (eeu & u"},{2," & colCount & u",");
+                vtText << u"},{2,"_ss + colCount + u",";
                 for (unsigned i = 0; i < colCount; i++) {
-                    vtText << (eeu & i & u"," & i & u",");
+                    vtText << eeu + i + u"," + i + u",";
                 }
                 vtText << u"{1,0},2,-1},{0,0}}}";
             } else
@@ -284,7 +284,7 @@ struct JsonReceiver : ToTextReceiver {
 
     void addColumnName(ssu name) {
         checkColumnForDates(name);
-        vtText << (uR"({"#type":"jxs:string","#value":")" & expr_json_str(name) & u"\"}");
+        vtText << uR"({"#type":"jxs:string","#value":")" + expr_json_str(name) + u"\"}";
         addDelim();
     }
     void addRow() {
@@ -296,28 +296,28 @@ struct JsonReceiver : ToTextReceiver {
         addDelim();
     }
     void addInteger(int64_t v) {
-        vtText << (eeu & uR"({"#type":"jxs:decimal","#value":)" & v & u"}");
+        vtText << uR"({"#type":"jxs:decimal","#value":)"_ss + v + u"}";
         addDelim();
     }
     void addReal(double v) {
         if constexpr (sizeof(wchar_t) == 2) {
-            vtText << (eeu & uR"({"#type":"jxs:decimal","#value":)" & v & u"}");
+            vtText << uR"({"#type":"jxs:decimal","#value":)"_ss + v + u"}";
         } else {
-            lstringa<40> va = eea & v;
-            vtText << (uR"({"#type":"jxs:decimal","#value":)" & lstringu<40>{va} & u"}");
+            lstringa<40> va = eea + v;
+            vtText << uR"({"#type":"jxs:decimal","#value":)" + lstringu<40>{va} + u"}";
         }
         addDelim();
     }
     void addText(ssu v) {
         if (dates[currentCol] && v.len == 19) {
-            vtText << (uR"({"#type":"jxs:dateTime","#value":")" & v(0, 10) & u'T' & v(11) & u"\"}");
+            vtText << uR"({"#type":"jxs:dateTime","#value":")" + v(0, 10) + u'T' + v(11) + u"\"}";
         } else {
-            vtText << (uR"({"#type":"jxs:string","#value":")" & expr_json_str(v) & u"\"}");
+            vtText << uR"({"#type":"jxs:string","#value":")" + expr_json_str(v) + u"\"}";
         }
         addDelim();
     }
     void addBlob(ssa v) {
-        vtText << (uR"({"#type":"jxs:base64Binary","#value":")" & expr_str_base64(v) & u"\"}");
+        vtText << uR"({"#type":"jxs:base64Binary","#value":")" + expr_str_base64(v) + u"\"}";
         addDelim();
     }
     void setResult(int e, sqlite3* db) {
@@ -386,7 +386,7 @@ bool V8SqliteAddin::ExecQuery(tVariant& retVal, tVariant* params, unsigned count
     }
 
     bool result = false;
-    lastError_.makeEmpty();
+    lastError_.make_empty();
 
     if (resultFormat.compare_ia(u"ValueTable") == 0 || resultFormat.compare_iu(u"ТаблицаЗначений") == 0) {
         result = execQuery<ValueTableReceiver>(*query, retVal, dates, memoryManager_);
@@ -407,10 +407,10 @@ bool V8SqliteAddin::RemoveQuery(tVariant* params, unsigned count) {
         return error(u"Запрос с таким именем не найден", u"No query found for that name");
     }
     prepared_.erase(find);
-    lastError_.makeEmpty();
+    lastError_.make_empty();
     return true;
 }
 
 bool V8SqliteAddin::reportDbError() {
-    return error(selectLocaleStr(u"Произошла ошибка базы данных", u"Database error") & u": " & db_.lastError());
+    return error(selectLocaleStr(u"Произошла ошибка базы данных", u"Database error") + u": " + db_.lastError());
 }

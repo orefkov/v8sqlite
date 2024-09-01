@@ -4,26 +4,7 @@
 */
 #include "core_as/str/simple_unicode.h"
 #include "core_as/str/sstring.h"
-
-#ifdef _WIN32
-extern "C" {
-int __stdcall MultiByteToWideChar(
-    unsigned CodePage, unsigned dwFlags, const char* lpMultiByteStr, int cbMultiByte, wchar_t* lpWideCharStr, int cchWideChar);
-
-int __stdcall WideCharToMultiByte(
-    unsigned CodePage,
-    unsigned dwFlags,
-    const wchar_t* lpWideCharStr,
-    int cchWideChar,
-    char* lpMultiByteStr,
-    int cbMultiByte,
-    const char* lpDefaultChar,
-    bool* lpUsedDefaultChar);
-}
-
-#define CP_UTF8 65001 // UTF-8 translation
-
-#endif
+#include "simdutf/simdutf.h"
 
 namespace core_as::str {
 
@@ -63,7 +44,7 @@ u32s readUtf8Symbol(const uu8s*& ptr, const uu8s* end) {
     u32s us = static_cast<u32s>(*ptr++);
     if (us >= 0xC0) {
         us = sqlite3Utf8Trans1[us - 0xC0];
-        while (ptr != end && (*ptr & 0xC0) == 0x80)
+        while (ptr < end && (*ptr & 0xC0) == 0x80)
             us = (us << 6) + (0x3F & *(ptr++));
         if (us < 0x80 || (us & 0xFFFFF800) == 0xD800 || (us & 0xFFFFFFFE) == 0xFFFE) {
             us = 0xFFFD;
@@ -125,58 +106,28 @@ size_t utf8len(u32s us) {
         return 4;
 }
 
-COREAS_API size_t utf_convert_selector<u8s, u16s>::convert(const u8s* src, size_t srcLen, u16s* dest) {
-#ifndef _WIN32
-    const u8s* end = src + srcLen;
-    u16s* ptr      = dest;
-    while (src < end)
-        writeUtf16Symbol(ptr, readUtf8Symbol((const uu8s*&)src, (const uu8s*)end));
-    return static_cast<size_t>(ptr - dest);
-#else
-    return MultiByteToWideChar(CP_UTF8, 0, src, static_cast<unsigned>(srcLen), (wchar_t*)dest, static_cast<unsigned>(srcLen) * 8);
-#endif
+size_t utf_convert_selector<u8s, u16s>::convert(const u8s* src, size_t srcLen, u16s* dest) {
+    return simdutf::convert_utf8_to_utf16(src, srcLen, dest);
 }
 
-COREAS_API size_t utf_convert_selector<u8s, u32s>::convert(const u8s* src, size_t srcLen, u32s* dest) {
-    const u8s* end = src + srcLen;
-    u32s* ptr      = dest;
-    while (src < end)
-        *ptr++ = readUtf8Symbol((const uu8s*&)src, (const uu8s*)end);
-    return static_cast<size_t>(ptr - dest);
+size_t utf_convert_selector<u8s, u32s>::convert(const u8s* src, size_t srcLen, u32s* dest) {
+    return simdutf::convert_utf8_to_utf32(src, srcLen, dest);
 }
 
-COREAS_API size_t utf_convert_selector<u16s, u8s>::convert(const u16s* src, size_t srcLen, u8s* dest) {
-#ifndef _WIN32
-    const u16s* end = src + srcLen;
-    u8s* ptr        = dest;
-    while (src < end)
-        writeUtf8Symbol((uu8s*&)ptr, readUtf16Symbol(src, end));
-    return static_cast<size_t>(ptr - dest);
-#else
-    return WideCharToMultiByte(CP_UTF8, 0, (const wchar_t*)src, static_cast<unsigned>(srcLen), dest, static_cast<unsigned>(srcLen) * 8, "?", nullptr);
-#endif
+size_t utf_convert_selector<u16s, u8s>::convert(const u16s* src, size_t srcLen, u8s* dest) {
+    return simdutf::convert_utf16_to_utf8(src, srcLen, dest);
 }
 
-COREAS_API size_t utf_convert_selector<u16s, u32s>::convert(const u16s* src, size_t srcLen, u32s* dest) {
-    const u16s* end = src + srcLen;
-    u32s* ptr       = dest;
-    while (src < end)
-        *ptr++ = readUtf16Symbol(src, end);
-    return static_cast<size_t>(ptr - dest);
+size_t utf_convert_selector<u16s, u32s>::convert(const u16s* src, size_t srcLen, u32s* dest) {
+    return simdutf::convert_utf16_to_utf32(src, srcLen, dest);
 }
 
-COREAS_API size_t utf_convert_selector<u32s, u8s>::convert(const u32s* src, size_t srcLen, u8s* dest) {
-    u8s* ptr = dest;
-    for (size_t i = 0; i < srcLen; i++)
-        writeUtf8Symbol((uu8s*&)ptr, *src++);
-    return static_cast<size_t>(ptr - dest);
+size_t utf_convert_selector<u32s, u8s>::convert(const u32s* src, size_t srcLen, u8s* dest) {
+    return simdutf::convert_utf32_to_utf8(src, srcLen, dest);
 }
 
-COREAS_API size_t utf_convert_selector<u32s, u16s>::convert(const u32s* src, size_t srcLen, u16s* dest) {
-    u16s* ptr = dest;
-    for (size_t i = 0; i < srcLen; i++)
-        writeUtf16Symbol(ptr, *src++);
-    return static_cast<size_t>(ptr - dest);
+size_t utf_convert_selector<u32s, u16s>::convert(const u32s* src, size_t srcLen, u16s* dest) {
+    return simdutf::convert_utf32_to_utf16(src, srcLen, dest);
 }
 
 inline u32s makeLowerU(u32s s) {
@@ -416,7 +367,7 @@ template<typename Op> size_t utf8_findFirstCase(const u8s* src, size_t len, cons
         if (s1 != s2)
             return static_cast<size_t>(pFrom - beginReadPos);
     }
-    return str_pos::badIdx;
+    return npos;
 }
 
 COREAS_API size_t unicode_traits<u8s>::findFirstUpper(const u8s* src, size_t len) {
@@ -458,7 +409,7 @@ template<typename Op> size_t utf16_findFirstCase(const u16s* src, size_t len, co
         if (s1 != s2)
             return static_cast<size_t>(pFrom - src);
     }
-    return str_pos::badIdx;
+    return npos;
 }
 
 COREAS_API size_t unicode_traits<u16s>::findFirstUpper(const u16s* src, size_t len) {
@@ -500,7 +451,7 @@ template<typename Op> size_t utf32_findFirstCase(const u32s* src, size_t len, co
             return static_cast<size_t>(readPos - src);
         readPos++;
     }
-    return str_pos::badIdx;
+    return npos;
 }
 
 COREAS_API size_t unicode_traits<u32s>::findFirstUpper(const u32s* src, size_t len) {
@@ -545,9 +496,9 @@ COREAS_API int unicode_traits<u16s>::compareiu(const u16s* text1, size_t len1, c
             return 1;
         else if (s1 < s2)
             return -1;
-        else if (text1 > ptr1End)
-            return text2 > ptr2End ? 0 : -1;
-        else if (text2 > ptr2End)
+        else if (text1 >= ptr1End)
+            return text2 >= ptr2End ? 0 : -1;
+        else if (text2 >= ptr2End)
             return 1;
     }
 }
