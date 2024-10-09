@@ -1,4 +1,5 @@
-﻿#include "stdafx.h"
+﻿#include "core_as/str/strexpr.h"
+#include "stdafx.h"
 #include "sqlite.h"
 
 extern "C" int sqlite3_unicode_load();
@@ -193,8 +194,8 @@ u16s* expr_str_base64::place(u16s* ptr) const noexcept {
 }
 
 core_as::str::u16s* expr_str_tm::place(u16s* ptr) const noexcept {
-    if constexpr (sizeof(wchar_t) == 2) {
-        std::swprintf((wchar_t*)ptr, 20, L"%04i-%02i-%02i %02i:%02i:%02i", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+    if constexpr (wchar_is_u16) {
+        std::swprintf(from_w(ptr), 20, L"%04i-%02i-%02i %02i:%02i:%02i", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
     } else {
         char buf[20];
         std::snprintf(buf, 20, "%04i-%02i-%02i %02i:%02i:%02i", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);

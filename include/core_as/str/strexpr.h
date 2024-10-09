@@ -13,7 +13,9 @@
 namespace core_as::str {
 
 // Выводим типы для 16 и 32 битных символов взависимости от размера wchar_t
-using wchar_type = std::conditional<sizeof(wchar_t) == 2, char16_t, char32_t>::type;
+inline constexpr bool wchar_is_u16 = sizeof(wchar_t) == 2; 
+
+using wchar_type = std::conditional<wchar_is_u16, char16_t, char32_t>::type;
 
 inline wchar_type* to_w(wchar_t* p) {
     return (reinterpret_cast<wchar_type*>(p));
@@ -21,6 +23,14 @@ inline wchar_type* to_w(wchar_t* p) {
 
 inline const wchar_type* to_w(const wchar_t* p) {
     return (reinterpret_cast<const wchar_type*>(p));
+}
+
+inline wchar_t* from_w(wchar_type* p) {
+    return (reinterpret_cast<wchar_t*>(p));
+}
+
+inline const wchar_t* from_w(const wchar_type* p) {
+    return (reinterpret_cast<const wchar_t*>(p));
 }
 
 using u8s = char;

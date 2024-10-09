@@ -223,7 +223,7 @@ struct ValueTableReceiver : ToTextReceiver {
         currentCol++;
     }
     void addReal(double v) {
-        if constexpr (sizeof(wchar_t) == 2) {
+        if constexpr (wchar_is_u16) {
             vtText << u"{\"N\","_ss + v + u"},";
         } else {
             vtText << u"{\"N\"," + lstringu<40>{lstringa<40>{eea + v}} + u"},";
@@ -299,7 +299,7 @@ struct JsonReceiver : ToTextReceiver {
         addDelim();
     }
     void addReal(double v) {
-        if constexpr (sizeof(wchar_t) == 2) {
+        if constexpr (wchar_is_u16) {
             vtText << uR"({"#type":"jxs:decimal","#value":)"_ss + v + u"}";
         } else {
             vtText << uR"({"#type":"jxs:decimal","#value":)" + lstringu<40>{lstringa<40>{eea + v}} + u"}";
@@ -372,7 +372,7 @@ bool V8SqliteAddin::ExecQuery(tVariant& retVal, tVariant* params, unsigned count
         }
     }
 
-    SqliteQuery tmpQuery{nullptr}, *query = nullptr;
+    SqliteQuery tmpQuery, *query = nullptr;
     auto find = prepared_.find(varToTextU(params[0]));
     if (find == prepared_.end()) {
         tmpQuery = db_.prepare(varToTextU(params[0]));

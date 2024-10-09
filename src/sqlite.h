@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "core_as/str/sstring.h"
 #include "sqlite3.h"
+#include <type_traits>
 #include <utility>
 using namespace core_as::str;
 
@@ -100,20 +101,13 @@ struct db_traits<int> : db_int_traits<int> {};
 template<>
 struct db_traits<unsigned int> : db_int_traits<unsigned int> {};
 template<>
-struct db_traits<long> : db_int_traits<long> {};
+struct db_traits<long> : std::conditional_t<sizeof(long) == 4, db_int_traits<long>, db_int64_traits<long>> {};
 template<>
-struct db_traits<unsigned long> : db_int_traits<unsigned long> {};
-#ifdef WIN32
-template<>
-struct db_traits<int64_t> : db_int64_traits<int64_t> {};
-template<>
-struct db_traits<uint64_t> : db_int64_traits<uint64_t> {};
-#else
+struct db_traits<unsigned long> : std::conditional_t<sizeof(unsigned long) == 4, db_int_traits<unsigned long>, db_int64_traits<unsigned long>> {};
 template<>
 struct db_traits<long long> : db_int64_traits<long long> {};
 template<>
 struct db_traits<unsigned long long> : db_int64_traits<unsigned long long> {};
-#endif
 template<>
 struct db_traits<double> : db_double_traits<double> {};
 template<>
@@ -156,6 +150,7 @@ struct db_traits<db_null> {
 
 class SqliteQuery {
 public:
+    SqliteQuery() = default;
     SqliteQuery(sqlite3_stmt* stmt) : stmt_(stmt) {}
 
     ~SqliteQuery() {

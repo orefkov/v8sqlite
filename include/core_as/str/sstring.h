@@ -1690,7 +1690,7 @@ template<>
 struct printf_selector<u16s> {
     template<typename... T>
     static int snprintf(u16s* buffer, size_t count, const u16s* format, T&&... args) {
-        if constexpr (sizeof(wchar_t) == 2) {
+        if constexpr (wchar_is_u16) {
 #ifndef _WIN32
             return std::swprintf((wchar_t*)buffer, count, (const wchar_t*)format, std::forward<T>(args)...);
 #else
@@ -1702,7 +1702,7 @@ struct printf_selector<u16s> {
         }
     }
     static int vsnprintf(wchar_t* buffer, size_t count, const wchar_t* format, va_list args) {
-        if constexpr (sizeof(wchar_t) == 2) {
+        if constexpr (wchar_is_u16) {
 #ifndef _WIN32
             return std::vswprintf((wchar_t*)buffer, count, (const wchar_t*)format, args);
 #else
