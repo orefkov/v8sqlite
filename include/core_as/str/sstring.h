@@ -1083,7 +1083,7 @@ struct CheckSpaceTrim<K, false> {
 template<typename K>
 struct CheckSymbolsTrim {
     SimpleStr<K> symbols;
-    bool isTrimSybols(K s) const {
+    bool isTrimSymbols(K s) const {
         return symbols.len != 0 && SimpleStr<K>::traits::find(symbols.str, symbols.len, s) != nullptr;
     }
 };
@@ -1114,14 +1114,14 @@ struct CheckConstSymbolsTrim {
         return s == symbols[Idx] || isInSymbols<Idx + 1>(s);
     }
 
-    bool isTrimSybols(K s) const noexcept {
+    bool isTrimSymbols(K s) const noexcept {
         return isInSymbols<0>(s);
     }
 };
 
 template<typename K>
 struct CheckConstSymbolsTrim<K, 0> {
-    bool isTrimSybols(K) const {
+    bool isTrimSymbols(K) const {
         return false;
     }
 };
@@ -1144,7 +1144,7 @@ struct SymbSelector<K, static_cast<size_t>(-1)> {
 template<TrimSides S, typename K, size_t N, bool withSpaces>
 struct trimOperator : SymbSelector<K, N>::type, CheckSpaceTrim<K, withSpaces> {
     bool isTrim(K s) const {
-        return CheckSpaceTrim<K, withSpaces>::isTrimSpaces(s) || SymbSelector<K, N>::type::isTrimSybols(s);
+        return CheckSpaceTrim<K, withSpaces>::isTrimSpaces(s) || SymbSelector<K, N>::type::isTrimSymbols(s);
     }
     SimpleStr<K> operator()(SimpleStr<K> from) const {
         if constexpr ((S & TrimSides::TrimLeft) != 0) {
