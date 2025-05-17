@@ -10,8 +10,8 @@
 #define LINUX_OR_MACOS
 #endif
 
-#include <core_as/str/sstring.h>
-using namespace core_as::str;
+#include <simstr/sstring.h>
+using namespace simstr;
 
 #include "AddInDefBase.h"
 #include "ComponentBase.h"

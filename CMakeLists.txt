@@ -162,9 +162,12 @@ endif ()
 
 include_directories("${CMAKE_SOURCE_DIR}/1C_include")
 include_directories("${CMAKE_SOURCE_DIR}/include")
+include_directories("${CMAKE_SOURCE_DIR}/libs/simstr/include")
 include_directories("${CMAKE_SOURCE_DIR}/sqlite3")
 
 # Include sub-projects.
-add_subdirectory (libs/core_as/str)
+set (SIMSTR_BUILD_TESTS OFF)
+set (SIMSTR_BENCHMARKS OFF)
+add_subdirectory (libs/simstr)
 add_subdirectory (sqlite3)
 add_subdirectory (src)

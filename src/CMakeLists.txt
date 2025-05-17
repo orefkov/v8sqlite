@@ -19,7 +19,7 @@ if (WIN32)
 endif()
 
 add_library(${PROJECT_NAME} SHARED ${V8SQLITE_SRC})
-target_link_libraries(${PROJECT_NAME} sqlite3 core_as_str)
+target_link_libraries(${PROJECT_NAME} sqlite3 simstr)
 
 add_compile_definitions(
     SQLITE_CORE

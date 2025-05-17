@@ -2,18 +2,6 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-COREAS_API void* core_as_malloc(size_t count) {
-    return malloc(count);
-}
-
-COREAS_API void* core_as_realloc(void* ptr, size_t count) {
-    return realloc(ptr, count);
-}
-
-COREAS_API void core_as_free(void* ptr) {
-    free(ptr);
-}
-
 /*
 * Мок для 1Сного менеджера памяти
 */

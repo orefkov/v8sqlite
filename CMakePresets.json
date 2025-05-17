@@ -1,186 +1,186 @@
 {
-  "version": 3,
-  "configurePresets": [
-    {
-      "name": "base",
-      "hidden": true,
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/_build/objs/${presetName}",
-      "installDir": "${sourceDir}/_build/install/${presetName}",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": true
-      }
-    },
-    {
-      "name": "windows-base",
-      "hidden": true,
-      "inherits": "base",
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      }
-    },
-    {
-      "name": "compiler-cl",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "cl",
-        "CMAKE_CXX_COMPILER": "cl"
-      }
-    },
-    {
-      "name": "compiler-clang-cl",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang-cl",
-        "CMAKE_CXX_COMPILER": "clang-cl"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-clang-x64"
-        }
-      }
-    },
-    {
-      "name": "x64",
-      "hidden": true,
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      }
-    },
-    {
-      "name": "x86",
-      "hidden": true,
-      "architecture": {
-        "value": "x86",
-        "strategy": "external"
-      }
-    },
-    {
-      "name": "windows-base-debug",
-      "hidden": true,
-      "inherits": "windows-base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
-      "name": "windows-base-release",
-      "hidden": true,
-      "inherits": "windows-base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    },
-    {
-      "name": "x64-debug",
-      "displayName": "x64 Debug",
-      "inherits": [
-        "windows-base-debug",
-        "compiler-cl",
-        "x64"
-      ]
-    },
-    {
-      "name": "x64-release",
-      "displayName": "x64 Release",
-      "inherits": [
-        "windows-base-release",
-        "compiler-cl",
-        "x64"
-      ]
-    },
-    {
-      "name": "x64-debug-clang",
-      "displayName": "clang x64 Debug",
-      "inherits": [
-        "windows-base-debug",
-        "compiler-clang-cl",
-        "x64"
-      ]
-    },
-    {
-      "name": "x64-release-clang",
-      "displayName": "clang x64 Release",
-      "inherits": [
-        "windows-base-release",
-        "compiler-clang-cl",
-        "x64"
-      ]
-    },
-    {
-      "name": "x86-debug",
-      "displayName": "x86 Debug",
-      "inherits": [
-        "windows-base-debug",
-        "compiler-cl",
-        "x86"
-      ]
-    },
-    {
-      "name": "x86-release",
-      "displayName": "x86 Release",
-      "inherits": [
-        "windows-base-release",
-        "compiler-cl",
-        "x86"
-      ]
-    },
-    {
-      "name": "linux-base",
-      "hidden": true,
-      "inherits": "base",
-      "displayName": "Linux Debug",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang-18",
-        "CMAKE_CXX_COMPILER": "clang++-18",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": true
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
-          "sourceDir": "$env{HOME}/projects/$ms{projectDirName}",
-          "copySourcesOptions": {
-            "exclusionList": [
-              ".vs",
-              ".git",
-              "out",
-              "_build",
-              "1C"
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/_build/objs/${presetName}",
+            "installDir": "${sourceDir}/_build/install/${presetName}",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true
+            }
+        },
+        {
+            "name": "windows-base",
+            "hidden": true,
+            "inherits": "base",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "compiler-cl",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl",
+                "CMAKE_CXX_COMPILER": "cl"
+            }
+        },
+        {
+            "name": "compiler-clang-cl",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang-cl",
+                "CMAKE_CXX_COMPILER": "clang-cl"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "intelliSenseMode": "windows-clang-x64"
+                }
+            }
+        },
+        {
+            "name": "x64",
+            "hidden": true,
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            }
+        },
+        {
+            "name": "x86",
+            "hidden": true,
+            "architecture": {
+                "value": "x86",
+                "strategy": "external"
+            }
+        },
+        {
+            "name": "windows-base-debug",
+            "hidden": true,
+            "inherits": "windows-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "windows-base-release",
+            "hidden": true,
+            "inherits": "windows-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "x64-debug",
+            "displayName": "x64 Debug",
+            "inherits": [
+                "windows-base-debug",
+                "compiler-cl",
+                "x64"
             ]
-          }
+        },
+        {
+            "name": "x64-release",
+            "displayName": "x64 Release",
+            "inherits": [
+                "windows-base-release",
+                "compiler-cl",
+                "x64"
+            ]
+        },
+        {
+            "name": "x64-debug-clang",
+            "displayName": "clang x64 Debug",
+            "inherits": [
+                "windows-base-debug",
+                "compiler-clang-cl",
+                "x64"
+            ]
+        },
+        {
+            "name": "x64-release-clang",
+            "displayName": "clang x64 Release",
+            "inherits": [
+                "windows-base-release",
+                "compiler-clang-cl",
+                "x64"
+            ]
+        },
+        {
+            "name": "x86-debug",
+            "displayName": "x86 Debug",
+            "inherits": [
+                "windows-base-debug",
+                "compiler-cl",
+                "x86"
+            ]
+        },
+        {
+            "name": "x86-release",
+            "displayName": "x86 Release",
+            "inherits": [
+                "windows-base-release",
+                "compiler-cl",
+                "x86"
+            ]
+        },
+        {
+            "name": "linux-base",
+            "hidden": true,
+            "inherits": "base",
+            "displayName": "Linux Debug",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang-18",
+                "CMAKE_CXX_COMPILER": "clang++-18",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
+                    "sourceDir": "$env{HOME}/projects/$ms{projectDirName}",
+                    "copySourcesOptions": {
+                        "exclusionList": [
+                            ".vs",
+                            ".git",
+                            "out",
+                            "_build",
+                            "1C"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "name": "linux-debug",
+            "displayName": "Linux Debug",
+            "inherits": "linux-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "linux-release",
+            "displayName": "Linux Release",
+            "inherits": "linux-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
         }
-      }
-    },
-    {
-      "name": "linux-debug",
-      "displayName": "Linux Debug",
-      "inherits": "linux-base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
-      "name": "linux-release",
-      "displayName": "Linux Release",
-      "inherits": "linux-base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "buildPresets",
-      "displayName": "Custom build preset",
-      "description": "Custom build preset description",
-      "configurePreset": "x64-release"
-    }
-  ]
+    ],
+    "buildPresets": [
+        {
+            "name": "buildPresets",
+            "displayName": "Custom build preset",
+            "description": "Custom build preset description",
+            "configurePreset": "x64-release"
+        }
+    ]
 }

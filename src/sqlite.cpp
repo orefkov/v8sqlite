@@ -1,5 +1,4 @@
-﻿#include "core_as/str/strexpr.h"
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "sqlite.h"
 
 extern "C" int sqlite3_unicode_load();
@@ -105,7 +104,7 @@ expr_json_str::expr_json_str(ssu t) : text(t) {
     l = text.len + add;
 }
 
-core_as::str::u16s* expr_json_str::place(u16s* ptr) const noexcept {
+simstr::u16s* expr_json_str::place(u16s* ptr) const noexcept {
     const u16s *r = text.symbols();
     size_t lenOfText = text.length(), lenOfTail = l;
     while (lenOfTail > lenOfText) {
@@ -193,15 +192,15 @@ u16s* expr_str_base64::place(u16s* ptr) const noexcept {
     return ptr;
 }
 
-core_as::str::u16s* expr_str_tm::place(u16s* ptr) const noexcept {
-    if constexpr (wchar_is_u16) {
+simstr::u16s* expr_str_tm::place(u16s* ptr) const noexcept {
+    #ifndef __linux__
         std::swprintf(from_w(ptr), 20, L"%04i-%02i-%02i %02i:%02i:%02i", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
-    } else {
+    #else
         char buf[20];
         std::snprintf(buf, 20, "%04i-%02i-%02i %02i:%02i:%02i", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
         for (unsigned i = 0; i < 19; i++) {
             ptr[i] = buf[i];
         }
-    }
+    #endif
     return ptr + 19;
 }
