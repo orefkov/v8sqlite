@@ -1,3 +1,5 @@
+#pragma code_page(65001)
+
 // Microsoft Visual C++ generated resource script.
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -15,13 +17,11 @@
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-#pragma code_page(1251)
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
 // TEXTINCLUDE
-//
 
 
 2 TEXTINCLUDE 
@@ -63,13 +63,13 @@ BEGIN
     BEGIN
         BLOCK "041904b0"
         BEGIN
-            VALUE "CompanyName", "Александр Орефков"
-            VALUE "FileDescription", "ВК 1С8 для работы с sqlite"
+            VALUE "CompanyName", "РђР»РµРєСЃР°РЅРґСЂ РћСЂРµС„РєРѕРІ"
+            VALUE "FileDescription", "Р’Рљ 1РЎ8 РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ sqlite"
             VALUE "FileVersion", P_VERSION
             VALUE "InternalName", "v8sqlite.dll"
             VALUE "LegalCopyright", COPY_RIGHT
             VALUE "OriginalFilename", "v8sqlite.dll"
-            VALUE "ProductName", "Проект ""V8sqlite"""
+            VALUE "ProductName", "РџСЂРѕРµРєС‚ ""V8sqlite"""
             VALUE "ProductVersion", P_VERSION
         END
     END
@@ -95,4 +95,3 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-

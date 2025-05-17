@@ -11,7 +11,7 @@ long GetClassObject(const WCHAR_T* wsName, IComponentBase** pInterface) {
     if (!*pInterface) {
         stru name{wsName};
         for (const AddinInfo* ptr = AddinInfo::first; ptr; ptr = ptr->next) {
-            if (ptr->name.isEqual_iu(name)) {
+            if (ptr->name.equal_iu(name)) {
                 *pInterface = ptr->create();
                 break;
             }
@@ -42,10 +42,13 @@ long DestroyObject(IComponentBase** pIntf) {
 const WCHAR_T* GetClassNames() {
     static auto classes = []() {
         lstringu<100> classes;
-        for (AddinInfo* ptr = AddinInfo::first; ptr; ptr = ptr->next) {
+        for (AddinInfo* ptr = AddinInfo::first; ptr; ) {
             classes += ptr->name;
-            if (ptr->next) {
+            ptr = ptr->next;
+            if (ptr) {
                 classes += u"|";
+            } else {
+                break;
             }
         }
         return classes;

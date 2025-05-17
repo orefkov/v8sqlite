@@ -50,7 +50,7 @@ bool V8SqliteAddin::PrepareQuery(tVariant* params, unsigned count) {
     if (!query.valid()) {
         return reportDbError();
     }
-    prepared_.emplace_or_assign(varToTextU(params[0]), std::move(query));
+    prepared_.emplace(varToTextU(params[0]), std::move(query));
     lastError_.make_empty();
     return true;
 }
@@ -105,10 +105,10 @@ static bool makeBind(SqliteQuery& query, tVariant& param, unsigned paramNum) {
         query.bind(paramNum, (ssa)varToTextA(param));
         break;
     case VTYPE_DATE:
-        query.bind(paramNum, lstringu<30>{expr_str_tm{winDateToTm(param.date)}}.toStr());
+        query.bind(paramNum, lstringu<30>{expr_str_tm{winDateToTm(param.date)}}.to_str());
         break;
     case VTYPE_TM:
-        query.bind(paramNum, lstringu<30>{expr_str_tm{param.tmVal}}.toStr());
+        query.bind(paramNum, lstringu<30>{expr_str_tm{param.tmVal}}.to_str());
         break;
     default:
         return false;
@@ -160,7 +160,7 @@ struct ToTextReceiver {
         colCount = cc;
         dates.resize(colCount, 0);
         for (const auto& [d, _1]: datesColumns) {
-            auto [colIdx, err, _2] = d.to_str().toInt<unsigned, true, 10, false>();
+            auto [colIdx, err, _2] = d.to_str().to_int<unsigned, true, 10, false>();
             if (err == IntConvertResult::Success && colIdx < colCount) {
                 dates[colIdx] = 1;
             }
@@ -189,7 +189,7 @@ struct ValueTableReceiver : ToTextReceiver {
 
     void addColumnName(ssu name) {
         checkColumnForDates(name);
-        if (name.find('\"') != npos) {
+        if (name.find('\"') != str::npos) {
             lstringu<200> idName{e_repl(name, u"\"", u"\"\"")};
             vtText << u"{"_ss + currentCol + u",\"" + idName + u"\",{\"Pattern\"},\"" + idName + u"\",0},";
         } else {
@@ -223,11 +223,11 @@ struct ValueTableReceiver : ToTextReceiver {
         currentCol++;
     }
     void addReal(double v) {
-        if constexpr (wchar_is_u16) {
+        #ifndef __linux__
             vtText << u"{\"N\","_ss + v + u"},";
-        } else {
+        #else
             vtText << u"{\"N\"," + lstringu<40>{lstringa<40>{eea + v}} + u"},";
-        }
+        #endif
         currentCol++;
     }
     void addText(ssu v) {
@@ -299,11 +299,11 @@ struct JsonReceiver : ToTextReceiver {
         addDelim();
     }
     void addReal(double v) {
-        if constexpr (wchar_is_u16) {
+        #ifndef __linux__
             vtText << uR"({"#type":"jxs:decimal","#value":)"_ss + v + u"}";
-        } else {
+        #else
             vtText << uR"({"#type":"jxs:decimal","#value":)" + lstringu<40>{lstringa<40>{eea + v}} + u"}";
-        }
+        #endif
         addDelim();
     }
     void addText(ssu v) {

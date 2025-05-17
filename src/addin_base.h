@@ -2,17 +2,18 @@
 #include "AddInDefBase.h"
 #include "ComponentBase.h"
 #include "IMemoryManager.h"
-#include "core_as/str/sstring.h"
+#include "simstr/sstring.h"
 #include "core_as/testable_static_assert.h"
 #include <utility>
-using namespace core_as::str;
 
-inline static stru varToTextU(const tVariant& v) {
-    return stru{v.pwstrVal, v.wstrLen};
+using namespace simstr;
+
+inline stru varToTextU(const tVariant& v) {
+    return {v.pwstrVal, v.wstrLen};
 }
 
-inline static stra varToTextA(const tVariant& v) {
-    return stra{v.pstrVal, v.strLen};
+inline stra varToTextA(const tVariant& v) {
+    return {v.pstrVal, v.strLen};
 }
 
 inline static bool isInteger(const tVariant& v) {

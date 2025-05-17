@@ -1,9 +1,9 @@
 ﻿#pragma once
-#include "core_as/str/sstring.h"
+#include "simstr/sstring.h"
 #include "sqlite3.h"
 #include <type_traits>
 #include <utility>
-using namespace core_as::str;
+using namespace simstr;
 
 class SqliteQuery;
 
