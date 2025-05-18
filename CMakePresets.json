@@ -133,11 +133,6 @@
             "hidden": true,
             "inherits": "base",
             "displayName": "Linux Debug",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang-18",
-                "CMAKE_CXX_COMPILER": "clang++-18",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": true
-            },
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
@@ -162,6 +157,7 @@
             "name": "linux-debug",
             "displayName": "Linux Debug",
             "inherits": "linux-base",
+            "hidden": true,
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }
@@ -170,8 +166,45 @@
             "name": "linux-release",
             "displayName": "Linux Release",
             "inherits": "linux-base",
+            "hidden": true,
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "linux-clang-16-debug",
+            "displayName": "Linux Clang 16 Debug",
+            "inherits": "linux-debug",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "/usr/bin/clang-16",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++-16"
+            }
+        },
+        {
+            "name": "linux-clang-16-release",
+            "displayName": "Linux Clang 16 Release",
+            "inherits": "linux-release",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "/usr/bin/clang-16",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++-16"
+            }
+        },
+        {
+            "name": "linux-clang-21-debug",
+            "displayName": "Linux Clang 21 Debug",
+            "inherits": "linux-debug",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "/usr/bin/clang-21",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++-21"
+            }
+        },
+        {
+            "name": "linux-clang-21-release",
+            "displayName": "Linux Clang 21 Release",
+            "inherits": "linux-release",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "/usr/bin/clang-21",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++-21"
             }
         }
     ],
