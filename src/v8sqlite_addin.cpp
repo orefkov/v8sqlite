@@ -364,7 +364,7 @@ bool V8SqliteAddin::ExecQuery(tVariant& retVal, tVariant* params, unsigned count
     if (params[2].vt != VTYPE_NULL) {
         if (params[2].vt == VTYPE_PWSTR) {
             auto vals = varToTextU(params[2]).splitter(u",");
-            while (!vals.isDone()) {
+            while (!vals.is_done()) {
                 dates.emplace(vals.next().trimmed(), 0);
             }
         } else {
@@ -386,9 +386,9 @@ bool V8SqliteAddin::ExecQuery(tVariant& retVal, tVariant* params, unsigned count
     bool result = false;
     lastError_.make_empty();
 
-    if (resultFormat.compare_ia(u"ValueTable") == 0 || resultFormat.compare_iu(u"ТаблицаЗначений") == 0) {
+    if (resultFormat.equal_ia(u"ValueTable") || resultFormat.equal_iu(u"ТаблицаЗначений")) {
         result = execQuery<ValueTableReceiver>(*query, retVal, dates, memoryManager_);
-    } else if (resultFormat.compare_ia(u"JSON") == 0) {
+    } else if (resultFormat.equal_ia(u"JSON")) {
         result = execQuery<JsonReceiver>(*query, retVal, dates, memoryManager_);
     } else {
         return error(u"Неизвестный формат для результата", u"Unknown result format");
