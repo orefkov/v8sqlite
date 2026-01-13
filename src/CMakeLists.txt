@@ -18,8 +18,23 @@ if (WIN32)
     LIST(APPEND V8SQLITE_SRC dllmain.cpp v8sqlite.rc v8sqlite.def)
 endif()
 
+function(add_simstr)
+    set(SIMSTR_BUILD_TESTS OFF)
+    set(SIMSTR_BENCHMARKS OFF)
+    FetchContent_Declare(
+        simstr
+        GIT_REPOSITORY https://github.com/orefkov/simstr.git
+        GIT_SHALLOW TRUE
+        GIT_TAG tags/rel1.3.1
+        FIND_PACKAGE_ARGS NAMES simstr
+    )
+    FetchContent_MakeAvailable(simstr)
+endfunction()
+
+add_simstr()
+
 add_library(${PROJECT_NAME} SHARED ${V8SQLITE_SRC})
-target_link_libraries(${PROJECT_NAME} sqlite3 simstr)
+target_link_libraries(${PROJECT_NAME} sqlite3 simstr::simstr)
 
 add_compile_definitions(
     SQLITE_CORE

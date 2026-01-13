@@ -206,9 +206,9 @@ TEST(AddinBase, GetClassNames) {
 
     auto names = stru{GetClassNames()}.splitter(u"|");
 
-    EXPECT_FALSE(names.isDone());
+    EXPECT_FALSE(names.is_done());
 
-    while (!names.isDone()) {
+    while (!names.is_done()) {
         auto fnd = addinNames.find(names.next());
         EXPECT_NE(fnd, addinNames.end());
         addinNames.erase(fnd);

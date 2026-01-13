@@ -4,18 +4,12 @@
 
 #if defined(__linux__) || defined(__APPLE__) || defined(__ANDROID__)
 
-#ifdef __ANDROID__
-
 typedef struct {
     unsigned int   Data1;
     unsigned short Data2;
     unsigned short Data3;
     unsigned char  Data4[ 8 ];
 } uuid_t;
-
-#else
-#include <linux/uuid.h>
-#endif //__ANDROID__
 
 #ifndef __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__  // iOS
 #include <dlfcn.h>
@@ -93,7 +87,6 @@ typedef unsigned short      USHORT;
 typedef void                *HMODULE;
 #define OLESTR(str) L##str
 
-typedef guid_t uuid_t;
 typedef uuid_t GUID;
 typedef uuid_t IID;
 typedef uuid_t UUID;

@@ -172,21 +172,21 @@
             }
         },
         {
-            "name": "linux-clang-16-debug",
-            "displayName": "Linux Clang 16 Debug",
+            "name": "linux-clang-18-debug",
+            "displayName": "Linux Clang 18 Debug",
             "inherits": "linux-debug",
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "/usr/bin/clang-16",
-                "CMAKE_CXX_COMPILER": "/usr/bin/clang++-16"
+                "CMAKE_C_COMPILER": "/usr/bin/clang-18",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++-18"
             }
         },
         {
-            "name": "linux-clang-16-release",
-            "displayName": "Linux Clang 16 Release",
+            "name": "linux-clang-18-release",
+            "displayName": "Linux Clang 18 Release",
             "inherits": "linux-release",
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "/usr/bin/clang-16",
-                "CMAKE_CXX_COMPILER": "/usr/bin/clang++-16"
+                "CMAKE_C_COMPILER": "/usr/bin/clang-18",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++-18"
             }
         },
         {
@@ -209,11 +209,5 @@
         }
     ],
     "buildPresets": [
-        {
-            "name": "buildPresets",
-            "displayName": "Custom build preset",
-            "description": "Custom build preset description",
-            "configurePreset": "x64-release"
-        }
     ]
 }

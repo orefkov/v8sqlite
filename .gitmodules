@@ -1,3 +1,0 @@
-[submodule "simstr"]
-	path = libs/simstr
-	url = git@github.com:orefkov/simstr.git

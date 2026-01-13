@@ -1,5 +1,7 @@
 # V8Sqlite
 
+[![CMake on Windows](https://github.com/orefkov/v8sqlite/actions/workflows/cmake-multi-platform.yml/badge.svg)](https://github.com/orefkov/v8sqlite/actions/workflows/cmake-multi-platform.yml)
+
 Нативная внешняя компонента для 1С 8 для работы с базами данных sqlite.
 Позволяет выполнять запросы к базам данных sqlite и получать их результаты в виде ТаблицыЗначений или массива массивов.
 
@@ -9,7 +11,7 @@
 - Linux x64
 
 Сама библиотека sqlite подключена статически, то есть внедрена в ВК.
-Используется версия 3.49.2. Версию sqlite можно узнать запросом
+Используется версия 3.51.2. Версию sqlite можно узнать запросом
 
 ```
     select sqlite_version()
